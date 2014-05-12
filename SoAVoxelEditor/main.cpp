@@ -19,13 +19,16 @@
 #include "FileManager.h"
 #include "Shader.h"
 #include "GlobalStructs.h"
+#include "Texture.h"
 
 void initialize();
 void initializeSdlOpengl();
 void initializeShaders();
+void initializeTextures();
 void control();
 void update();
 void draw();
+void drawSelected();
 void destroy();
 bool checkGlError();
 
@@ -37,6 +40,9 @@ SDL_Window *mainWindow;
 SDL_GLContext mainOpenGLContext;
 
 Camera *mainCamera;
+
+vector <texture*> cubeTexts;
+vector <texture*> cubeSelectedTexts;
 
 
 
@@ -52,7 +58,7 @@ int main(int argc, char **argv)
 		control();
 		update();
 		draw();
-
+		
 		//TODO: FPS limiter
 	}
 
@@ -61,6 +67,7 @@ int main(int argc, char **argv)
 	destroy();
 	return 0;
 }
+
 
 
 void initialize()
@@ -72,6 +79,7 @@ void initialize()
 
 	initializeSdlOpengl();
 	initializeShaders();
+	initializeTextures();
 
 	mainCamera = new Camera();
 
@@ -165,7 +173,13 @@ void initializeSdlOpengl()
 
 void initializeShaders()
 {
-	blockShader.initialize("Shaders/BlockShading/");
+	blockShader.initialize("Shaders/");
+}
+
+void initializeTextures()
+{
+	cubeTexts.push_back(new texture("Data/black.png"));
+	cubeSelectedTexts.push_back(new texture("Data/blackSelected.png"));
 }
 
 
@@ -190,6 +204,9 @@ void control()
 			break;
 		case SDL_MOUSEBUTTONUP:
 			MouseButtons[evnt.button.button] = 0;
+			break;
+		case SDL_MOUSEWHEEL:
+			mainCamera->mouseZoom(evnt.wheel.y);
 			break;
 		case SDL_KEYDOWN:
 			Keys[evnt.key.keysym.sym].pr = 1;
@@ -227,11 +244,25 @@ void draw()
 
 	glm::mat4 MVP = mainCamera->projectionMatrix * mainCamera->viewMatrix * modelMatrix;
 
-	//send our uniform data, the matrix and the light position
+	//send our uniform data, the matrix, the light position, and the texture data
 	glUniformMatrix4fv(blockShader.mvpID, 1, GL_FALSE, &MVP[0][0]);
 	glm::vec3 lightPos(0.1f, 0.5f, 0.8f);
 	lightPos = glm::normalize(lightPos);
 	glUniform3f(blockShader.lightPosID, lightPos.x, lightPos.y, lightPos.z);
+	
+	//t key toggles between selected/not selected texture
+	if (Keys[SDLK_t].pr == 1){
+		glBindTexture(GL_TEXTURE_2D, cubeTexts[0]->data);
+		checkGlError();
+		glUniform1i(blockShader.textPosID, 0);
+	}
+	else{
+		glBindTexture(GL_TEXTURE_2D, cubeSelectedTexts[0]->data);
+		checkGlError();
+		glUniform1i(blockShader.textPosID, 0);
+	}
+
+	//glUniform1f(blockShader.selected, 1);
 
 	//Static variables, so they are intitialized onces and remain for the life of the program.
 	//In reality, your meshes should be stored in a class somewhere, but this is just an example
@@ -260,6 +291,9 @@ void draw()
 			verts[i].color[1] = 0;
 			verts[i].color[2] = 0;
 			verts[i].color[3] = 255;
+
+			verts[i].text.x = cubeTextCoords[i * 2];
+			verts[i].text.y = cubeTextCoords[i * 2 + 1];
 		}
 		
 		//the indexes for drawing the cube, it just follows the pattern (i, i+1, i+2, i+2, i+3, i) for i += 4
@@ -287,14 +321,14 @@ void draw()
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(BlockVertex), (void *)0); //vertexPosition
 	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(BlockVertex), (void *)12); //vertexColor
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(BlockVertex), (void *)16); //vertexNormal
+	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(BlockVertex), (void *)28); //textureCoordinates
+
+
 
 	//Finally, draw our data. The last parameter is the offset into the bound buffer
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, NULL);
 
 	blockShader.unBind();
-
-	//swap buffers
-	SDL_GL_SwapWindow(mainWindow);
 }
 
 //hulk smash!

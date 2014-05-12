@@ -13,6 +13,7 @@ public:
 	Camera();
 	void update();
 	void mouseMove(int relx, int rely);
+	void mouseZoom(float zoomScale);
 
 	glm::vec3 position;
 	glm::vec3 direction;

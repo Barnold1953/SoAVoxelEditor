@@ -36,7 +36,7 @@ void Camera::update()
 		position += right*moveSpeed;
 	}
 	else if (Keys[SDLK_a].pr){
-		position -= right* moveSpeed;
+		position -= right*moveSpeed;
 	}
 
 	if (Keys[SDLK_SPACE].pr){
@@ -85,6 +85,11 @@ void Camera::mouseMove(int relx, int rely)
 		);
 
 	up = glm::cross(right, direction);
+}
+
+void Camera::mouseZoom(float zoomScale){
+	zoomScale *= 0.04f;
+	position += direction * zoomScale;
 }
 
 //update the view matrix every time the camera moves, or every frame
