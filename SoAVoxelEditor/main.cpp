@@ -173,7 +173,7 @@ void initializeSdlOpengl()
 
 void initializeShaders()
 {
-	blockShader.initialize("Shaders/");
+	blockShader.initialize("Shaders/BlockShading");
 }
 
 void initializeTextures()
