@@ -29,7 +29,6 @@ struct BlockVertex{
 	glm::vec2 text;
 };
 
-
 //here are the vertex positions for the 24 cube vertices
 static GLfloat cubeVertices[72] = { 
 0.0f, 1.000f, 1.000f, 0.0f, 0.0f, 1.000f, 1.000f, 0.0f, 1.000f, 1.000f, 1.000f, 1.000f,  // v1-v2-v3-v0 (front)
@@ -71,3 +70,7 @@ static float cubeTextCoords[48] = {
 
 	0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
 };
+
+
+glm::vec2 get2dPoint(glm::vec3 location, glm::mat4 view, glm::mat4 projection, int height, int width);
+glm::vec3 get3dPoint(glm::vec2 location, glm::mat4 view, glm::mat4 projection, int height, int width);

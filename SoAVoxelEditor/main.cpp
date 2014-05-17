@@ -28,7 +28,6 @@ void initializeTextures();
 void control();
 void update();
 void draw();
-void drawSelected();
 void destroy();
 bool checkGlError();
 
@@ -173,7 +172,7 @@ void initializeSdlOpengl()
 
 void initializeShaders()
 {
-	blockShader.initialize("Shaders/BlockShading");
+	blockShader.initialize("Shaders/");
 }
 
 void initializeTextures()
@@ -201,6 +200,10 @@ void control()
 			break;
 		case SDL_MOUSEBUTTONDOWN:
 			MouseButtons[evnt.button.button] = 1;
+			if (MouseButtons[SDL_BUTTON_LEFT]){
+				glm::vec3 temp = get3dPoint(glm::vec2(evnt.motion.x, evnt.motion.y), mainCamera->viewMatrix, mainCamera->projectionMatrix, graphicsOptions.screenHeight, graphicsOptions.screenWidth);
+				printf("mouse xyz coords = <%f, %f, %f>\n", temp.x, temp.y, temp.z);
+			}
 			break;
 		case SDL_MOUSEBUTTONUP:
 			MouseButtons[evnt.button.button] = 0;
@@ -251,7 +254,7 @@ void draw()
 	glUniform3f(blockShader.lightPosID, lightPos.x, lightPos.y, lightPos.z);
 	
 	//t key toggles between selected/not selected texture
-	if (Keys[SDLK_t].pr == 1){
+	if (Keys[SDLK_t].pr == 0){
 		glBindTexture(GL_TEXTURE_2D, cubeTexts[0]->data);
 		checkGlError();
 		glUniform1i(blockShader.textPosID, 0);
@@ -329,6 +332,8 @@ void draw()
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, NULL);
 
 	blockShader.unBind();
+
+	SDL_GL_SwapWindow(mainWindow);
 }
 
 //hulk smash!
