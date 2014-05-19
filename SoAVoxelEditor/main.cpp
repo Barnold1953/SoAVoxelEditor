@@ -43,6 +43,8 @@ Camera *mainCamera;
 vector <texture*> cubeTexts;
 vector <texture*> cubeSelectedTexts;
 
+grid *gameGrid;
+
 
 
 int main(int argc, char **argv)
@@ -76,6 +78,11 @@ void initialize()
 
 	loadOptions("Data/options.ini");
 
+	gameGrid = new grid(10, 10, 10);
+	if (gameGrid->getVoxel(0, 0, -1) != NULL){
+		gameGrid->getVoxel(0, 0, -1)->type = 'b';
+		gameGrid->getVoxel(0, 0, -1)->selected = false;
+	}
 	initializeSdlOpengl();
 	initializeShaders();
 	initializeTextures();
@@ -201,8 +208,9 @@ void control()
 		case SDL_MOUSEBUTTONDOWN:
 			MouseButtons[evnt.button.button] = 1;
 			if (MouseButtons[SDL_BUTTON_LEFT]){
-				glm::vec3 temp = get3dPoint(glm::vec2(evnt.motion.x, evnt.motion.y), mainCamera->viewMatrix, mainCamera->projectionMatrix, graphicsOptions.screenHeight, graphicsOptions.screenWidth);
+				glm::vec3 temp = mainCamera->screenToWorld(glm::vec2(evnt.motion.x, evnt.motion.y), graphicsOptions.screenHeight, graphicsOptions.screenWidth);
 				printf("mouse xyz coords = <%f, %f, %f>\n", temp.x, temp.y, temp.z);
+				mainCamera->findIntersect(temp);
 			}
 			break;
 		case SDL_MOUSEBUTTONUP:
@@ -254,13 +262,21 @@ void draw()
 	glUniform3f(blockShader.lightPosID, lightPos.x, lightPos.y, lightPos.z);
 	
 	//t key toggles between selected/not selected texture
-	if (Keys[SDLK_t].pr == 0){
-		glBindTexture(GL_TEXTURE_2D, cubeTexts[0]->data);
-		checkGlError();
-		glUniform1i(blockShader.textPosID, 0);
+	//if (Keys[SDLK_t].pr == 0){
+	if (gameGrid->getVoxel(0, 0, -1) != NULL){
+		if (gameGrid->getVoxel(0, 0, -1)->selected == false){
+			glBindTexture(GL_TEXTURE_2D, cubeTexts[0]->data);
+			checkGlError();
+			glUniform1i(blockShader.textPosID, 0);
+		}
+		else{
+			glBindTexture(GL_TEXTURE_2D, cubeSelectedTexts[0]->data);
+			checkGlError();
+			glUniform1i(blockShader.textPosID, 0);
+		}
 	}
 	else{
-		glBindTexture(GL_TEXTURE_2D, cubeSelectedTexts[0]->data);
+		glBindTexture(GL_TEXTURE_2D, cubeTexts[0]->data);
 		checkGlError();
 		glUniform1i(blockShader.textPosID, 0);
 	}

@@ -111,3 +111,65 @@ void Camera::updateProjectionMatrix()
 	float zfar = 10000.0f;
 	projectionMatrix = glm::perspective((float)(graphicsOptions.fov), (float)graphicsOptions.screenWidth / (float)graphicsOptions.screenHeight, znear, zfar);
 }
+
+glm::vec3 Camera::screenToWorld(glm::vec2 mouse, int width, int height)
+{
+	cout << height << " " << width << endl;
+	cout << mouse.x << " " << mouse.y << endl;
+	//glm::vec4 rayStart(0.0f, 0.0f, -1.0f, 1.0f);
+	//glm::vec4 rayEnd(mouse.x - ((float)width / 2), mouse.y - ((float)height / 2), 0.0, 1.0);
+	glm::vec4 rayStart((mouse.x / (float)width - 0.5f) * 2.0f, (mouse.y / (float)height - 0.5f) * 2.0f, -1.0f, 1.0f);
+	glm::vec4 rayEnd((mouse.x / (float)width - 0.5f) * 2.0f, (mouse.y / (float)height - 0.5f) * 2.0f, 0.0f, 1.0f);
+
+	glm::mat4 M = glm::inverse(projectionMatrix * viewMatrix);
+	glm::vec4 rayStartWorld = M * rayStart;
+	rayStartWorld /= rayStartWorld.w;
+	glm::vec4 rayEndWorld = M * rayEnd;
+	rayEndWorld /= rayEndWorld.w;
+
+	glm::vec3 rayDirWorld(rayEndWorld - rayStartWorld);
+
+	/*for (float i = .01; i < 1.0; i += .01){
+		glm::vec4 tempLoc = rayStartWorld + rayEndWorld * i;
+
+	}*/
+
+	rayDirWorld = glm::normalize(rayDirWorld);
+
+	return rayDirWorld;
+	//glm::mat4 invProj = glm::inverse(projectionMatrix);
+	//glm::mat4 invView = glm::inverse(viewMatrix);
+
+	//glm::vec4 rayStartCamera = invProj * rayStart;
+	//glm::vec4 rayStartWorld = invView * rayStartCamera;
+	//glm::vec4 rayEndCamera = invProj * rayEnd;
+	//glm::vec4 rayEndWorld = invView * rayEndCamera;
+}
+
+void Camera::findIntersect(glm::vec3 direction){
+	float i = 1.0f;
+	glm::vec3 base = direction, tempV;
+	voxel *tempVox;
+
+	while(1){
+		tempV = direction * i;
+		tempVox = gameGrid->getVoxel(round(tempV.x), round(tempV.y), round(tempV.z));
+		if (tempVox == NULL){
+			break;
+		}
+		//tempVox = gameGrid->getVoxel(0,0,0);
+		cout << tempVox->type << endl;
+		if (tempVox == NULL){
+			printf("Final attempt at <%d,%d,%d>.\n", round(tempV.x), round(tempV.y), round(tempV.z));
+			break;
+		}
+
+		if (tempVox->type != '\0'){
+			tempVox->selected = !(tempVox->selected);
+			printf("Voxel at <%d,%d,%d> clicked.\n", round(tempV.x), round(tempV.y), round(tempV.z));
+			break;
+		}
+		i += 0.01f;
+	}
+	
+}

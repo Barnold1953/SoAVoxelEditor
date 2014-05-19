@@ -14,6 +14,8 @@ public:
 	void update();
 	void mouseMove(int relx, int rely);
 	void mouseZoom(float zoomScale);
+	glm::vec3 screenToWorld(glm::vec2 mouse, int width, int height);
+	void findIntersect(glm::vec3);
 
 	glm::vec3 position;
 	glm::vec3 direction;

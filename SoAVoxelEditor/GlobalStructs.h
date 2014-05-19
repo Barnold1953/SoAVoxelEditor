@@ -9,6 +9,7 @@
 #include <GL\glew.h>
 #include <glm\glm.hpp>
 #include <map>
+#include <vector>
 
 using namespace std;
 
@@ -28,6 +29,25 @@ struct BlockVertex{
 	glm::vec3 normal;
 	glm::vec2 text;
 };
+
+struct voxel{
+	char type;
+	bool selected;
+};
+
+class grid{
+	vector <voxel*> voxels;
+
+public:
+	grid(int,int,int);
+	void addVoxel(voxel*,int,int,int);
+	void removeVoxel(int, int, int);
+	voxel* getVoxel(int,int,int);
+
+	int h, w, l, layerSize;
+};
+
+extern grid *gameGrid;
 
 //here are the vertex positions for the 24 cube vertices
 static GLfloat cubeVertices[72] = { 
@@ -72,5 +92,5 @@ static float cubeTextCoords[48] = {
 };
 
 
-glm::vec2 get2dPoint(glm::vec3 location, glm::mat4 view, glm::mat4 projection, int height, int width);
-glm::vec3 get3dPoint(glm::vec2 location, glm::mat4 view, glm::mat4 projection, int height, int width);
+glm::vec2 get2dPoint(glm::vec3 location, const glm::mat4 &view, const glm::mat4 &projection, int height, int width);
+glm::vec3 get3dPoint(glm::vec2 location, const glm::mat4 &view, const glm::mat4 &projection, int height, int width);
