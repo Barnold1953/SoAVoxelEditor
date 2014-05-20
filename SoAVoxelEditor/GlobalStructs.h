@@ -30,6 +30,11 @@ struct BlockVertex{
 	glm::vec2 text;
 };
 
+struct GridVertex{
+	glm::vec3 position;
+	GLubyte color[4];
+};
+
 struct voxel{
 	char type;
 	bool selected;

@@ -25,7 +25,7 @@ Camera::Camera() : pitchAngle(0), yawAngle(2*M_PI-M_PI/2), direction(-1.0f, 0.0f
 
 void Camera::update()
 {
-	const float moveSpeed = 0.04f;
+	const float moveSpeed = 0.1f;
 	if (Keys[SDLK_w].pr){
 		position += direction*moveSpeed;
 	}else if (Keys[SDLK_s].pr){
@@ -151,22 +151,23 @@ void Camera::findIntersect(glm::vec3 direction){
 	glm::vec3 base = direction, tempV;
 	voxel *tempVox;
 
+	printf("direction is <%f,%f,%f>.\n", direction.x, direction.y, direction.z);
 	while(1){
 		tempV = direction * i;
 		tempVox = gameGrid->getVoxel(round(tempV.x), round(tempV.y), round(tempV.z));
-		if (tempVox == NULL){
-			break;
-		}
 		//tempVox = gameGrid->getVoxel(0,0,0);
-		cout << tempVox->type << endl;
+		
 		if (tempVox == NULL){
-			printf("Final attempt at <%d,%d,%d>.\n", round(tempV.x), round(tempV.y), round(tempV.z));
+			cout << "i: " << i << endl;
+			printf("Final attempt at <%f,%f,%f>.\n", tempV.x, tempV.y, tempV.z);
+			printf("Final attempt at <%f,%f,%f>.\n", round(tempV.x), round(tempV.y), round(tempV.z));
 			break;
 		}
 
 		if (tempVox->type != '\0'){
+			cout << tempVox->type << endl;
 			tempVox->selected = !(tempVox->selected);
-			printf("Voxel at <%d,%d,%d> clicked.\n", round(tempV.x), round(tempV.y), round(tempV.z));
+			printf("Voxel at <%f,%f,%f> clicked.\n", round(tempV.x), round(tempV.y), round(tempV.z));
 			break;
 		}
 		i += 0.01f;

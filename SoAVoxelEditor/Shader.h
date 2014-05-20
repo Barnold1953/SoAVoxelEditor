@@ -41,4 +41,13 @@ public:
 	void unBind();
 };
 
+class GridShader : public Shader
+{
+public:
+	void initialize(string dirPath);
+	void bind();
+	void unBind();
+};
+
 extern BlockShader blockShader;
+extern GridShader gridShader;

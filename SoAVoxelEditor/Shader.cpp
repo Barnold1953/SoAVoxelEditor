@@ -10,6 +10,7 @@
 #include "Errors.h"
 
 BlockShader blockShader;
+GridShader gridShader;
 
 GLuint LoadShaders(const char * vertex_file_path, const char * fragment_file_path, GLuint &VertexShaderID, GLuint &FragmentShaderID);
 void LinkShaders(GLuint ProgramID, GLuint VertexShaderID, GLuint FragmentShaderID);
@@ -61,6 +62,42 @@ void BlockShader::unBind()
 	glDisableVertexAttribArray(1); //vertexColor
 	glDisableVertexAttribArray(2); //vertexNormal
 	glDisableVertexAttribArray(3); //textureCoordinate
+}
+
+void GridShader::initialize(string dirPath)
+{
+	if (initialized) return;
+	cout << "Loading gridShader\n";
+
+	GLuint vID, fID;
+	shaderID = LoadShaders((dirPath + "GridShading.vert").c_str(), (dirPath + "GridShading.frag").c_str(), vID, fID);
+	glBindAttribLocation(shaderID, 0, "vertexPosition");
+	glBindAttribLocation(shaderID, 1, "vertexColor");
+	LinkShaders(shaderID, vID, fID);
+
+	mvpID = GetUniform(shaderID, "MVP");
+
+	initialized = 1;
+}
+
+void GridShader::bind()
+{
+	if (!initialized){
+		error("SHADER BOUND BEFORE INITIALIZATION");
+		int a;
+		cin >> a;
+	}
+	glUseProgram(shaderID);
+	//need to enable all the vertex attributes.
+	glEnableVertexAttribArray(0); //vertexPosition
+	glEnableVertexAttribArray(1); //vertexColor
+}
+
+void GridShader::unBind()
+{
+	//need to disable all the vertex attributes. Otherwise, bugs occur when drawing other things on some graphics cards
+	glDisableVertexAttribArray(0); //vertexPosition
+	glDisableVertexAttribArray(1); //vertexColor
 }
 
 GLuint LoadShaders(const char * vertex_file_path, const char * fragment_file_path, GLuint &VertexShaderID, GLuint &FragmentShaderID){

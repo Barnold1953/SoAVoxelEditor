@@ -80,9 +80,16 @@ void grid::removeVoxel(int x, int y, int z){
 
 }
 voxel* grid::getVoxel(int x, int y, int z){
-	x += (w / 2);
+	/*x += (w / 2);
 	y += (h / 2);
-	z += l;
+	z += (l / 2);*/
+	if (x <= -1)
+		x += w;
+	if (y <= -1)
+		y += h;
+	if (z <= -1)
+		z += l;
+
 
 	//printf("getVoxel coordinates <%d,%d,%d>\n", x, y, z);
 	bool rangeCheck = false;
