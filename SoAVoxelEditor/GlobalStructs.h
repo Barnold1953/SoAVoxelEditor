@@ -41,9 +41,10 @@ struct voxel{
 };
 
 class grid{
-	vector <voxel*> voxels;
+	
 
 public:
+	vector <voxel*> voxels;
 	grid(int,int,int);
 	void addVoxel(voxel*,int,int,int);
 	void removeVoxel(int, int, int);

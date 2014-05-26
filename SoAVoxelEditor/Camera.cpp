@@ -16,7 +16,7 @@
 #include <glm\gtc\matrix_transform.hpp>
 
 //the way I am initializing the position and angles here is stupid. I calculated it by hand and wrote it down.
-Camera::Camera() : pitchAngle(0), yawAngle(2*M_PI-M_PI/2), direction(-1.0f, 0.0f, 0.0f), up(0.0f, 1.0f, 0.0f), right(0.0f, 0.0f, -1.0f), position(2.0f, 0.0f, 0.5f)
+Camera::Camera() : pitchAngle(0), yawAngle(3*M_PI/2), direction(-1.0f, 0.0f, 0.0f), up(0.0f, 1.0f, 0.0f), right(0.0f, 0.0f, -1.0f), position(2.0f, 0.0f, 0.5f)
 {
 	updateViewMatrix();
 	updateProjectionMatrix();
@@ -25,7 +25,7 @@ Camera::Camera() : pitchAngle(0), yawAngle(2*M_PI-M_PI/2), direction(-1.0f, 0.0f
 
 void Camera::update()
 {
-	const float moveSpeed = 0.1f;
+	const float moveSpeed = 0.5f;
 	if (Keys[SDLK_w].pr){
 		position += direction*moveSpeed;
 	}else if (Keys[SDLK_s].pr){
@@ -52,6 +52,8 @@ void Camera::update()
 //this function moves the camera direction when the player is dragging the camera
 void Camera::mouseMove(int relx, int rely)
 {
+
+
 	yawAngle += controlsOptions.mouseSensitivity * float(-relx) * 0.005f;
 	pitchAngle += controlsOptions.mouseSensitivity * float(-rely) * 0.005f;
 	cout << pitchAngle << " " << yawAngle << endl;
@@ -112,65 +114,103 @@ void Camera::updateProjectionMatrix()
 	projectionMatrix = glm::perspective((float)(graphicsOptions.fov), (float)graphicsOptions.screenWidth / (float)graphicsOptions.screenHeight, znear, zfar);
 }
 
+//glm::vec3 Camera::screenToWorld(glm::vec2 mouse, int width, int height)
+//{
+//	cout << height << " " << width << endl;
+//	cout << mouse.x << " " << mouse.y << endl;
+//	printf("screen space <%f,%f>\n.", (mouse.x / (float)width - 0.5f), (-mouse.y / (float)height + 0.5f));
+//	glm::vec4 rayStart(0.0f, 0.0f, -1.0f, 1.0f);
+//	//glm::vec4 rayEnd(mouse.x - ((float)width / 2), mouse.y - ((float)height / 2), 0.0, 1.0);
+//	//glm::vec4 rayStart((mouse.x / (float)width - 0.5f) * 2.0f, (mouse.y / (float)height - 0.5f) * 2.0f, -1.0f, 1.0f);
+//	glm::vec4 rayEnd((mouse.x / (float)width - 0.5f) * 2.0f, -(mouse.y / (float)height - 0.5f) * 2.0f, 0.0f, 1.0f);
+//	//glm::vec4 rayEnd((2.0f * mouse.x) / width - 1.0f, 1.0f - (2.0f * mouse.y) / height, -1.0f, 1.0f);
+//	glm::mat4 modelMatrix(1);
+//	modelMatrix[3][0] = -position.x;
+//	modelMatrix[3][1] = -position.y;
+//	modelMatrix[3][2] = -position.z;
+//
+//
+//	glm::mat4 M = glm::inverse(projectionMatrix * viewMatrix);
+//	//M = M * modelMatrix;
+//	//glm::mat4 M = projectionMatrix * viewMatrix;
+//	glm::vec4 rayStartWorld = M * rayStart;
+//	rayStartWorld /= rayStartWorld.w;
+//	glm::vec4 rayEndWorld = M * rayEnd;
+//	rayEndWorld /= rayEndWorld.w;
+//
+//	glm::vec3 rayDirWorld(rayEndWorld - rayStartWorld);
+//
+//	rayDirWorld = glm::normalize(rayDirWorld);
+//
+//	return rayDirWorld;
+//	//glm::mat4 invProj = glm::inverse(projectionMatrix);
+//	//glm::mat4 invView = glm::inverse(viewMatrix);
+//
+//	//glm::vec4 rayStartCamera = invProj * rayStart;
+//	//rayStartCamera /= rayStartCamera.w;
+//	//glm::vec4 rayStartWorld = invView * rayStartCamera;
+//	//rayStartWorld /= rayStartWorld.w;
+//	//glm::vec4 rayEndCamera = invProj * rayEnd;
+//	//rayEndCamera /= rayEndCamera.w;
+//	//glm::vec4 rayEndWorld = invView * rayEndCamera;
+//	//rayEndWorld /= rayEndWorld.w;
+//	//glm::vec3 rayDirWorld(rayEndWorld - rayStartWorld);
+//
+//	//rayDirWorld = glm::normalize(rayDirWorld);
+//
+//	//return rayDirWorld;
+//}
+
 glm::vec3 Camera::screenToWorld(glm::vec2 mouse, int width, int height)
 {
 	cout << height << " " << width << endl;
 	cout << mouse.x << " " << mouse.y << endl;
-	//glm::vec4 rayStart(0.0f, 0.0f, -1.0f, 1.0f);
-	//glm::vec4 rayEnd(mouse.x - ((float)width / 2), mouse.y - ((float)height / 2), 0.0, 1.0);
-	glm::vec4 rayStart((mouse.x / (float)width - 0.5f) * 2.0f, (mouse.y / (float)height - 0.5f) * 2.0f, -1.0f, 1.0f);
-	glm::vec4 rayEnd((mouse.x / (float)width - 0.5f) * 2.0f, (mouse.y / (float)height - 0.5f) * 2.0f, 0.0f, 1.0f);
+	printf("Screen space <%f,%f>.\n", (mouse.x / (float)width - 0.5f), -(mouse.y / (float)height - 0.5f));
+	glm::vec4 rayClip((mouse.x / (float)width - 0.5f), -(mouse.y / (float)height - 0.5f), 0.0f, 1.0f);
+	glm::vec4 rayEye = glm::inverse(projectionMatrix) * rayClip;
+	//glm::vec4 rayEye = glm::inverse(projectionMatrix * projectionMatrix) * rayClip;
+	rayEye = glm::vec4(rayEye.x, rayEye.y, rayEye.z, 1.0);
+	glm::vec3 rayWorld = glm::normalize(glm::vec3((glm::inverse(viewMatrix) * rayEye).x, (glm::inverse(viewMatrix) * rayEye).y, (glm::inverse(viewMatrix) * rayEye).z));
+	//glm::vec3 rayWorld = glm::normalize(glm::vec3(rayEye.x,rayEye.y,rayEye.z));
+	printf("World space <%f,%f,%f>.\n", rayWorld.x, rayWorld.y, rayWorld.z);
 
-	glm::mat4 M = glm::inverse(projectionMatrix * viewMatrix);
-	glm::vec4 rayStartWorld = M * rayStart;
-	rayStartWorld /= rayStartWorld.w;
-	glm::vec4 rayEndWorld = M * rayEnd;
-	rayEndWorld /= rayEndWorld.w;
-
-	glm::vec3 rayDirWorld(rayEndWorld - rayStartWorld);
-
-	/*for (float i = .01; i < 1.0; i += .01){
-		glm::vec4 tempLoc = rayStartWorld + rayEndWorld * i;
-
-	}*/
-
-	rayDirWorld = glm::normalize(rayDirWorld);
-
-	return rayDirWorld;
-	//glm::mat4 invProj = glm::inverse(projectionMatrix);
-	//glm::mat4 invView = glm::inverse(viewMatrix);
-
-	//glm::vec4 rayStartCamera = invProj * rayStart;
-	//glm::vec4 rayStartWorld = invView * rayStartCamera;
-	//glm::vec4 rayEndCamera = invProj * rayEnd;
-	//glm::vec4 rayEndWorld = invView * rayEndCamera;
+	return rayWorld;
 }
 
 void Camera::findIntersect(glm::vec3 direction){
-	float i = 1.0f;
+	float i = 0.1f;
 	glm::vec3 base = direction, tempV;
 	voxel *tempVox;
 
-	printf("direction is <%f,%f,%f>.\n", direction.x, direction.y, direction.z);
-	while(1){
-		tempV = direction * i;
-		tempVox = gameGrid->getVoxel(round(tempV.x), round(tempV.y), round(tempV.z));
+	while(i < 10.0){
+		tempV = direction * i + position;
+		//printf("Attempt at <%f,%f,%f>.\n", round(tempV.x - position.x), round(tempV.y - position.y), round(tempV.z - position.z));
+		//tempVox = gameGrid->getVoxel(round(tempV.x), round(tempV.y), round(tempV.z));
+		if (tempV.x >= 0 && tempV.y >= 0 && tempV.z >= 0){
+			//printf("getVoxel called with <%f,%f,%f>\n.", tempV.x, tempV.y, tempV.z);
+			tempVox = gameGrid->getVoxel(tempV.x, tempV.y, tempV.z);
+		}
+		else{
+			tempVox = NULL;
+		}
 		//tempVox = gameGrid->getVoxel(0,0,0);
 		
 		if (tempVox == NULL){
-			cout << "i: " << i << endl;
-			printf("Final attempt at <%f,%f,%f>.\n", tempV.x, tempV.y, tempV.z);
-			printf("Final attempt at <%f,%f,%f>.\n", round(tempV.x), round(tempV.y), round(tempV.z));
-			break;
+			//cout << "i: " << i << endl;
+			//printf("Final attempt at <%f,%f,%f>.\n", tempV.x, tempV.y, tempV.z);
+			//printf("Final attempt at <%f,%f,%f>.\n", round(tempV.x), round(tempV.y), round(tempV.z));
+			//break;
 		}
 
-		if (tempVox->type != '\0'){
+		else if (tempVox->type != '\0'){
 			cout << tempVox->type << endl;
 			tempVox->selected = !(tempVox->selected);
-			printf("Voxel at <%f,%f,%f> clicked.\n", round(tempV.x), round(tempV.y), round(tempV.z));
+			printf("Voxel at <%d,%d,%d> clicked.\n", (int)(tempV.x), (int)(tempV.y), (int)(tempV.z));
 			break;
 		}
-		i += 0.01f;
+		i += 0.1f;
 	}
+	printf("Final attempt at <%f,%f,%f>.\n", tempV.x, tempV.y, tempV.z);
+	printf("Final attempt at <%d,%d,%d>.\n", (int)tempV.x, (int)tempV.y, (int)tempV.z);
 	
 }

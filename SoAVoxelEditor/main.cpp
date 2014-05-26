@@ -79,10 +79,10 @@ void initialize()
 
 	loadOptions("Data/options.ini");
 
-	gameGrid = new grid(10, 10, 10);
-	if (gameGrid->getVoxel(0, 0, 0) != NULL){
-		gameGrid->getVoxel(0, 0, 0)->type = 'b';
-		gameGrid->getVoxel(0, 0, 0)->selected = false;
+	gameGrid = new grid(10,10,10);
+	if (gameGrid->voxels[0] != NULL){
+		gameGrid->voxels[0]->type = 'b';
+		gameGrid->voxels[0]->selected = false;
 	}
 	initializeSdlOpengl();
 	initializeShaders();
@@ -254,6 +254,9 @@ void draw()
 	modelMatrix[3][0] = -mainCamera->position.x;
 	modelMatrix[3][1] = -mainCamera->position.y;
 	modelMatrix[3][2] = -mainCamera->position.z;
+	//modelMatrix[3][0] = mainCamera->direction.x + -mainCamera->position.x;
+	//modelMatrix[3][1] = mainCamera->direction.y + -mainCamera->position.y;
+	//modelMatrix[3][2] = mainCamera->direction.z + -mainCamera->position.z;
 
 	glm::mat4 MVP = mainCamera->projectionMatrix * mainCamera->viewMatrix * modelMatrix;
 
@@ -265,8 +268,8 @@ void draw()
 	
 	//t key toggles between selected/not selected texture
 	//if (Keys[SDLK_t].pr == 0){
-	if (gameGrid->getVoxel(0, 0, 0) != NULL){
-		if (gameGrid->getVoxel(0, 0, 0)->selected == false){
+	if (gameGrid->voxels[0] != NULL){
+		if (gameGrid->voxels[0]->selected == false){
 			glBindTexture(GL_TEXTURE_2D, cubeTexts[0]->data);
 			checkGlError();
 			glUniform1i(blockShader.textPosID, 0);
@@ -296,6 +299,7 @@ void draw()
 		glGenBuffers(1, &vboID);
 		//generate buffer object for the indices
 		glGenBuffers(1, &elementsID);
+
 
 		//Generate the cube's vertex data
 		BlockVertex verts[24];
@@ -475,6 +479,9 @@ void drawGrid()
 	modelMatrix[3][0] = -mainCamera->position.x;
 	modelMatrix[3][1] = -mainCamera->position.y;
 	modelMatrix[3][2] = -mainCamera->position.z;
+	//modelMatrix[3][0] = mainCamera->direction.x + -mainCamera->position.x;
+	//modelMatrix[3][1] = mainCamera->direction.y + -mainCamera->position.y;
+	//modelMatrix[3][2] = mainCamera->direction.z + -mainCamera->position.z;
 
 	glm::mat4 MVP = mainCamera->projectionMatrix * mainCamera->viewMatrix * modelMatrix;
 
@@ -502,70 +509,72 @@ void drawGrid()
 		l = gameGrid->l;
 		int sizeHolder = ((w+1)*(h+1) + (h+1)*(l+1) + (w+1)*(l+1)) * 2;
 		verts = new GridVertex[sizeHolder];
+		int alpha = 100;
 
 		for (int j = 0; j < w+1; j++){
 			for (int k = 0; k < h+1; k++, i+=2){
-				verts[i].position.x = j - (w / 2);
-				verts[i].position.y = k - (h / 2);
-				verts[i].position.z = -(l / 2);
+				verts[i].position.x = w - j;
+				verts[i].position.y = h - k;
+				//verts[i].position.z = -(l / 2);
+				verts[i].position.z = 0;
 
-				verts[i + 1].position.x = j - (w / 2);
-				verts[i + 1].position.y = k - (h / 2);
-				verts[i + 1].position.z = (l / 2);
+				verts[i + 1].position.x = w - j;
+				verts[i + 1].position.y = h - k;
+				verts[i + 1].position.z = l;
 
 				verts[i].color[0] = 255;
 				verts[i].color[1] = 0;
 				verts[i].color[2] = 0;
-				verts[i].color[3] = 255;
+				verts[i].color[3] = alpha;
 
 				verts[i+1].color[0] = 255;
 				verts[i+1].color[1] = 0;
 				verts[i+1].color[2] = 0;
-				verts[i+1].color[3] = 255;
+				verts[i+1].color[3] = alpha;
 			}
 		}
 
 		for (int j = 0; j < h+1; j++){
 			for (int k = 0; k < l+1; k++, i += 2){
-				verts[i].position.x = -(w / 2);
-				verts[i].position.y = j - (h / 2);
-				verts[i].position.z = k - (l / 2);
+				verts[i].position.x = 0;
+				verts[i].position.y = h - j;
+				verts[i].position.z = l - k;
 
-				verts[i + 1].position.x = (w / 2);
-				verts[i + 1].position.y = j - (h / 2);
-				verts[i + 1].position.z = k - (l / 2);
+				verts[i + 1].position.x = w;
+				verts[i + 1].position.y = h - j;
+				verts[i + 1].position.z = l - k;
 
 				verts[i].color[0] = 255;
 				verts[i].color[1] = 0;
 				verts[i].color[2] = 0;
-				verts[i].color[3] = 255;
+				verts[i].color[3] = alpha;
 
 				verts[i + 1].color[0] = 255;
 				verts[i + 1].color[1] = 0;
 				verts[i + 1].color[2] = 0;
-				verts[i + 1].color[3] = 255;
+				verts[i + 1].color[3] = alpha;
 			}
 		}
 
 		for (int j = 0; j < w+1; j++){
 			for (int k = 0; k < l+1; k++, i += 2){
-				verts[i].position.x = j - (w / 2);
-				verts[i].position.y = -(h / 2);
-				verts[i].position.z = k - (l / 2);
+				verts[i].position.x = w - j;
+				verts[i].position.y = 0;
+				verts[i].position.z = l - k;
 
-				verts[i + 1].position.x = j - (w / 2);
-				verts[i + 1].position.y = (h / 2);
-				verts[i + 1].position.z = k - (l / 2);
+				verts[i + 1].position.x = w - j;
+				verts[i + 1].position.y = h;
+				verts[i + 1].position.z = l - k;
 
 				verts[i].color[0] = 255;
 				verts[i].color[1] = 0;
 				verts[i].color[2] = 0;
-				verts[i].color[3] = 255;
+				verts[i].color[3] = alpha;
 
 				verts[i + 1].color[0] = 255;
 				verts[i + 1].color[1] = 0;
 				verts[i + 1].color[2] = 0;
-				verts[i + 1].color[3] = 255;
+				verts[i + 1].color[3] = alpha;
 			}
 		}
 
