@@ -182,7 +182,10 @@ void Camera::findIntersect(glm::vec3 direction){
 	glm::vec3 base = direction, tempV;
 	voxel *tempVox;
 
-	while(i < 10.0){
+    drawDebugLine = 1;
+    debugP1 = position;
+
+	while(i < 50.0){
 		tempV = direction * i + position;
 		//printf("Attempt at <%f,%f,%f>.\n", round(tempV.x - position.x), round(tempV.y - position.y), round(tempV.z - position.z));
 		//tempVox = gameGrid->getVoxel(round(tempV.x), round(tempV.y), round(tempV.z));
@@ -212,5 +215,5 @@ void Camera::findIntersect(glm::vec3 direction){
 	}
 	printf("Final attempt at <%f,%f,%f>.\n", tempV.x, tempV.y, tempV.z);
 	printf("Final attempt at <%d,%d,%d>.\n", (int)tempV.x, (int)tempV.y, (int)tempV.z);
-	
+    debugP2 = tempV;
 }

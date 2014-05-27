@@ -20,6 +20,7 @@
 #include "Shader.h"
 #include "GlobalStructs.h"
 #include "Texture.h"
+#include "RenderUtil.h"
 
 void initialize();
 void initializeSdlOpengl();
@@ -87,6 +88,8 @@ void initialize()
 	initializeSdlOpengl();
 	initializeShaders();
 	initializeTextures();
+
+    drawDebugLine = 0;
 
 	mainCamera = new Camera();
 
@@ -312,8 +315,8 @@ void draw()
 			verts[i].normal.y = cubeNormals[i * 3 + 1];
 			verts[i].normal.z = cubeNormals[i * 3 + 2];
 
-			verts[i].color[0] = 255;
-			verts[i].color[1] = 0;
+			verts[i].color[0] = 0;
+			verts[i].color[1] = 255;
 			verts[i].color[2] = 0;
 			verts[i].color[3] = 255;
 
@@ -363,6 +366,10 @@ void draw()
 	//glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, NULL);
 
 	blockShader.unBind();
+
+    if (drawDebugLine){
+        RenderUtil::drawLine(mainCamera, debugP1, debugP2, 255, 0, 255, 5);
+    }
 
 	drawGrid();
 
@@ -492,7 +499,7 @@ void drawGrid()
 	//In reality, your meshes should be stored in a class somewhere, but this is just an example
 	static GLuint vboID = 0;
 	static GLuint elementsID = 0;
-
+    static int sizeHolder = 0;
 	//initialize the buffer, only happens once
 	if (vboID == 0){
 		//generate a buffer object for the vboID. after this call, vboID will be a number > 0
@@ -507,7 +514,7 @@ void drawGrid()
 		w = gameGrid->w;
 		h = gameGrid->h;
 		l = gameGrid->l;
-		int sizeHolder = ((w+1)*(h+1) + (h+1)*(l+1) + (w+1)*(l+1)) * 2;
+		sizeHolder = ((w+1)*(h+1) + (h+1)*(l+1) + (w+1)*(l+1)) * 2;
 		verts = new GridVertex[sizeHolder];
 		int alpha = 100;
 
@@ -609,7 +616,7 @@ void drawGrid()
 	//Finally, draw our data. The last parameter is the offset into the bound buffer
 //	glDrawElements(GL_LINE_STRIP, 2, GL_UNSIGNED_INT, NULL);
 	glLineWidth(1);
-	glDrawElements(GL_LINES, ((gameGrid->w+1)*(gameGrid->h+1) + (gameGrid->h+1)*(gameGrid->l+1) + (gameGrid->w+1)*(gameGrid->l+1)) * 2, GL_UNSIGNED_INT, NULL);
+	glDrawElements(GL_LINES, sizeHolder, GL_UNSIGNED_INT, NULL);
 //	glDrawElements(GL_LINES, 600, GL_UNSIGNED_INT, NULL);
 
 	gridShader.unBind();
