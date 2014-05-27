@@ -163,18 +163,27 @@ void Camera::updateProjectionMatrix()
 
 glm::vec3 Camera::screenToWorld(glm::vec2 mouse, int width, int height)
 {
-	cout << height << " " << width << endl;
-	cout << mouse.x << " " << mouse.y << endl;
-	printf("Screen space <%f,%f>.\n", (mouse.x / (float)width - 0.5f), -(mouse.y / (float)height - 0.5f));
-	glm::vec4 rayClip((mouse.x / (float)width - 0.5f), -(mouse.y / (float)height - 0.5f), 0.0f, 1.0f);
-	glm::vec4 rayEye = glm::inverse(projectionMatrix) * rayClip;
-	//glm::vec4 rayEye = glm::inverse(projectionMatrix * projectionMatrix) * rayClip;
-	rayEye = glm::vec4(rayEye.x, rayEye.y, rayEye.z, 1.0);
-	glm::vec3 rayWorld = glm::normalize(glm::vec3((glm::inverse(viewMatrix) * rayEye).x, (glm::inverse(viewMatrix) * rayEye).y, (glm::inverse(viewMatrix) * rayEye).z));
-	//glm::vec3 rayWorld = glm::normalize(glm::vec3(rayEye.x,rayEye.y,rayEye.z));
-	printf("World space <%f,%f,%f>.\n", rayWorld.x, rayWorld.y, rayWorld.z);
 
-	return rayWorld;
+    /*cout << height << " " << width << endl;
+    cout << mouse.x << " " << mouse.y << endl;
+    printf("Screen space <%f,%f>.\n", (mouse.x / (float)width - 0.5f), -(mouse.y / (float)height - 0.5f));
+    glm::vec4 rayClip((mouse.x / (float)width - 0.5f), -(mouse.y / (float)height - 0.5f), 0.0f, 1.0f);
+    glm::vec4 rayEye = glm::inverse(projectionMatrix) * rayClip;
+
+    rayEye = glm::vec4(rayEye.x, rayEye.y, rayEye.z, 1.0);
+    glm::vec3 rayWorld = glm::normalize(glm::vec3((glm::inverse(viewMatrix) * rayEye).x, (glm::inverse(viewMatrix) * rayEye).y, (glm::inverse(viewMatrix) * rayEye).z));
+
+    printf("World space <%f,%f,%f>.\n", rayWorld.x, rayWorld.y, rayWorld.z);
+*/
+
+	//followed this tutorial : http://antongerdelan.net/opengl/raycasting.html
+    float x = (2.0f * mouse.x) / width - 1.0f;
+    float y = 1.0f - (2.0f * mouse.y) / height;
+    glm::vec4 rayClip(x,y,-1.0f,1.0f);
+    glm::vec4 rayEye = glm::inverse(projectionMatrix) * rayClip;
+    rayEye = glm::vec4(rayEye.x, rayEye.y, -1.0, 0.0);
+    glm::vec3 rayWorld = glm::vec3(glm::inverse(viewMatrix) * rayEye);
+    return glm::normalize(rayWorld);
 }
 
 void Camera::findIntersect(glm::vec3 direction){
