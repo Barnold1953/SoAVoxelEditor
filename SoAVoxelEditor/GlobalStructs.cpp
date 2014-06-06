@@ -13,32 +13,6 @@ bool drawDebugLine;
 map <GLuint, SOAKEY> Keys;
 bool MouseButtons[10];
 
-glm::vec2 get2dPoint(glm::vec3 location, glm::mat4 view, glm::mat4 projection, int height, int width){
-	glm::mat4 viewProd = projection * view;
-	glm::vec2 newCoord;
-	glm::vec4 container = (glm::vec4(location, 0.0f) * viewProd);
-	location.x = container.x;
-	location.y = container.y;
-	location.z = container.z;
-
-	newCoord.x = (int)round(((location.x + 1) / 2.0)*width);
-	newCoord.y = (int)round(((1 - location.y) / 2.0)*height);
-
-	return newCoord;
-}
-glm::vec3 get3dPoint(glm::vec2 location, glm::mat4 view, glm::mat4 projection, int height, int width){
-	double x = 2.0 * location.x / width - 1;
-	printf("%lf\n", x);
-	double y = 2.0 * location.y / height - 1;
-	glm::mat4 viewProd = glm::inverse(projection * view);
-	glm::vec4 container = glm::vec4(x, y, 0.0f, 0.0f) * viewProd;
-
-	float z = 0.0f;
-	//glReadBuffer(GL_FRONT);
-	//glReadPixels(x, y, 1, 1, GL_DEPTH_COMPONENT, GL_DOUBLE, &z);
-	return (glm::vec3(container.x, container.y, z));
-}
-
 grid::grid(int height, int width, int length){
 	voxels.resize(height*width*length);
 	for (int i = 0; i < height*width*length; i++){
@@ -50,27 +24,75 @@ grid::grid(int height, int width, int length){
 	w = width;
 	l = length;
 	layerSize = w * l;
+	vTot = 0;
 }
 
 //i*layersize + j*width + k
 //Y, Z, X basically‏
 
 void grid::addVoxel(voxel* newV, int x, int y, int z){
-	/*x += (w/2) - 1;
-	y += (h/2) - 1;
-	z += (l/2) - 1;*/
+	bool rangeCheck = false;
+
+	if (x < 0 || x >= w){
+		//printf("Value: %d for x is out of range\n", x);
+		rangeCheck = true;
+	}
+	if (y < 0 || y >= l){
+		//printf("Value: %d for y is out of range\n", y);
+		rangeCheck = true;
+	}
+	if (z < 0 || z >= h){
+		//printf("Value: %d for z is out of range\n", z);
+		rangeCheck = true;
+	}
+	if (rangeCheck == true){
+		return;
+	}
+
 	voxel *tempV = getVoxel(x, y, z);
 	if (tempV->type == '\0'){
-		tempV = newV;
+		tempV->type = newV->type;
+		tempV->selected = newV->selected;
+		vTot++;
+		for (int i = 0; i < 24; i++){
+			baseMesh.verts[i].offset.x = x;
+			baseMesh.verts[i].offset.y = y;
+			baseMesh.verts[i].offset.z = z;
+			currentVerts.push_back(baseMesh.verts[i]);
+		}
+		for (int i = currentVerts.size(); i < currentVerts.size() + 24;  i += 4){
+			currentIndices.push_back(i);
+			currentIndices.push_back(i+1);
+			currentIndices.push_back(i+2);
+			currentIndices.push_back(i+2);
+			currentIndices.push_back(i+3);
+			currentIndices.push_back(i);
+		}
+		changed = true;
 	}
 	else{
 		printf("Voxel space <%d,%d,%d> is occupied.\n", x, y, z);
 	}
+	printf("Voxel at <%d,%d,%d> added.\n", x, y, z);
 }
 void grid::removeVoxel(int x, int y, int z){
-	/*x += (w / 2) - 1;
-	y += (h / 2) - 1;
-	z += (l / 2) - 1;*/
+	bool rangeCheck = false;
+
+	if (x < 0 || x >= w){
+		//printf("Value: %d for x is out of range\n", x);
+		rangeCheck = true;
+	}
+	if (y < 0 || y >= l){
+		//printf("Value: %d for y is out of range\n", y);
+		rangeCheck = true;
+	}
+	if (z < 0 || z >= h){
+		//printf("Value: %d for z is out of range\n", z);
+		rangeCheck = true;
+	}
+	if (rangeCheck == true){
+		return;
+	}
 
 	voxel *tempV = getVoxel(x, y, z);
 	if (tempV->type == '\0'){
@@ -79,8 +101,16 @@ void grid::removeVoxel(int x, int y, int z){
 	else{
 		tempV->type = '\0';
 		tempV->selected = 0;
+		vTot--;
+		for (int i = 0; i < currentVerts.size(); i++){
+			if (currentVerts[i].offset.x == x && currentVerts[i].offset.y == y && currentVerts[i].offset.z == z){
+				currentVerts.erase(currentVerts.begin() + i, currentVerts.begin() + i + 24);
+				currentIndices.erase(currentIndices.begin() + i, currentIndices.begin() + i + 24);
+			}
+		}
+		changed = true;
 	}
-
+	printf("Voxel at <%d,%d,%d> removed.\n", x, y, z);
 }
 voxel* grid::getVoxel(int x, int y, int z){
 	//printf("getVoxel coordinates <%d,%d,%d>\n", x, y, z);
@@ -90,11 +120,11 @@ voxel* grid::getVoxel(int x, int y, int z){
 		//printf("Value: %d for x is out of range\n", x);
 		rangeCheck = true;
 	}
-	if (y < 0 || y >= h){
+	if (y < 0 || y >= l){
 		//printf("Value: %d for y is out of range\n", y);
 		rangeCheck = true;
 	}
-	if (z < 0 || z >= l){
+	if (z < 0 || z >= h){
 		//printf("Value: %d for z is out of range\n", z);
 		rangeCheck = true;
 	}

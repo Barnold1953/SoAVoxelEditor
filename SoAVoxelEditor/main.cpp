@@ -24,6 +24,7 @@
 
 void initialize();
 void initializeSdlOpengl();
+void initializeVertexBuffer();
 void initializeShaders();
 void initializeTextures();
 void control();
@@ -42,8 +43,17 @@ SDL_GLContext mainOpenGLContext;
 
 Camera *mainCamera;
 
-vector <texture*> cubeTexts;
-vector <texture*> cubeSelectedTexts;
+map <char, texture*> cubeTexts;
+map <char, texture*> cubeSelectedTexts;
+
+vector <BlockVertex> currentVerts;
+vector <int> currentIndices;
+BlockMesh baseMesh;
+voxel *currentVox;
+bool changed = true;
+
+//vector <texture*> cubeTexts;
+//vector <texture*> cubeSelectedTexts;
 
 grid *gameGrid;
 
@@ -81,11 +91,12 @@ void initialize()
 	loadOptions("Data/options.ini");
 
 	gameGrid = new grid(10,10,10);
-	if (gameGrid->voxels[0] != NULL){
-		gameGrid->voxels[0]->type = 'b';
-		gameGrid->voxels[0]->selected = false;
-	}
+	currentVox = new voxel;
+	currentVox->type = 'b';
+	currentVox->selected = false;
+
 	initializeSdlOpengl();
+	initializeVertexBuffer();
 	initializeShaders();
 	initializeTextures();
 
@@ -181,6 +192,41 @@ void initializeSdlOpengl()
 	//initializeFrameBuffer(); //initialize our FBO
 }
 
+void initializeVertexBuffer(){
+	int w, h, l;
+	w = gameGrid->w;
+	h = gameGrid->h;
+	l = gameGrid->l;
+	int cubeTot = w*h*l;
+	currentVerts.reserve(24 * cubeTot / 2);
+	
+	for (int i = 0; i < 24; i++){
+		baseMesh.verts[i].position.x = cubeVertices[i * 3];
+		baseMesh.verts[i].position.y = cubeVertices[i * 3 + 1];
+		baseMesh.verts[i].position.z = cubeVertices[i * 3 + 2];
+
+		baseMesh.verts[i].normal.x = cubeNormals[i * 3];
+		baseMesh.verts[i].normal.y = cubeNormals[i * 3 + 1];
+		baseMesh.verts[i].normal.z = cubeNormals[i * 3 + 2];
+
+		baseMesh.verts[i].color[0] = 255;
+		baseMesh.verts[i].color[1] = 0;
+		baseMesh.verts[i].color[2] = 0;
+		baseMesh.verts[i].color[3] = 255;
+
+		baseMesh.verts[i].text.x = cubeTextCoords[i * 2];
+		baseMesh.verts[i].text.y = cubeTextCoords[i * 2 + 1];
+
+		baseMesh.verts[i].offset.x = 0;
+		baseMesh.verts[i].offset.y = 0;
+		baseMesh.verts[i].offset.z = 0;
+		/*baseMesh.verts[i * 24 + j].offset.x = (i % (w * l)) % l;
+		baseMesh.verts[i * 24 + j].offset.y = (i % (w * l)) / l;
+		baseMesh.verts[i * 24 + j].offset.z = i / (w * l);*/
+	}
+	gameGrid->addVoxel(currentVox, 0, 0, 0);
+}
+
 void initializeShaders()
 {
 	blockShader.initialize("Shaders/");
@@ -189,8 +235,8 @@ void initializeShaders()
 
 void initializeTextures()
 {
-	cubeTexts.push_back(new texture("Data/black.png"));
-	cubeSelectedTexts.push_back(new texture("Data/blackSelected.png"));
+	cubeTexts.insert(make_pair('b', new texture("Data/black.png", 'b')));
+	cubeSelectedTexts.insert(make_pair('b', new texture("Data/blackSelected.png", 'b')));
 }
 
 
@@ -257,34 +303,34 @@ void draw()
 	modelMatrix[3][0] = -mainCamera->position.x;
 	modelMatrix[3][1] = -mainCamera->position.y;
 	modelMatrix[3][2] = -mainCamera->position.z;
-	//modelMatrix[3][0] = mainCamera->direction.x + -mainCamera->position.x;
-	//modelMatrix[3][1] = mainCamera->direction.y + -mainCamera->position.y;
-	//modelMatrix[3][2] = mainCamera->direction.z + -mainCamera->position.z;
 
-	glm::mat4 MVP = mainCamera->projectionMatrix * mainCamera->viewMatrix * modelMatrix;
+	//glm::mat4 MVP = mainCamera->projectionMatrix * mainCamera->viewMatrix * modelMatrix;
+	glm::mat4 VP = mainCamera->projectionMatrix * mainCamera->viewMatrix;
+	glm::mat4 M = modelMatrix;
 
 	//send our uniform data, the matrix, the light position, and the texture data
-	glUniformMatrix4fv(blockShader.mvpID, 1, GL_FALSE, &MVP[0][0]);
+	glUniformMatrix4fv(blockShader.mvpID, 1, GL_FALSE, &VP[0][0]);
+	glUniformMatrix4fv(blockShader.mID, 1, GL_FALSE, &M[0][0]);
 	glm::vec3 lightPos(0.1f, 0.5f, 0.8f);
 	lightPos = glm::normalize(lightPos);
 	glUniform3f(blockShader.lightPosID, lightPos.x, lightPos.y, lightPos.z);
 	
 	//t key toggles between selected/not selected texture
 	//if (Keys[SDLK_t].pr == 0){
-	if (gameGrid->voxels[0] != NULL){
-		if (gameGrid->voxels[0]->selected == false){
-			glBindTexture(GL_TEXTURE_2D, cubeTexts[0]->data);
+	if (gameGrid->getVoxel(0,0,0) != NULL){
+		if (gameGrid->getVoxel(0,0,0)->selected == false){
+			glBindTexture(GL_TEXTURE_2D, cubeTexts['b']->data);
 			checkGlError();
 			glUniform1i(blockShader.textPosID, 0);
 		}
 		else{
-			glBindTexture(GL_TEXTURE_2D, cubeSelectedTexts[0]->data);
+			glBindTexture(GL_TEXTURE_2D, cubeSelectedTexts['b']->data);
 			checkGlError();
 			glUniform1i(blockShader.textPosID, 0);
 		}
 	}
 	else{
-		glBindTexture(GL_TEXTURE_2D, cubeTexts[0]->data);
+		glBindTexture(GL_TEXTURE_2D, cubeTexts['b']->data);
 		checkGlError();
 		glUniform1i(blockShader.textPosID, 0);
 	}
@@ -297,7 +343,8 @@ void draw()
 	static GLuint elementsID = 0;
 
 	//initialize the buffer, only happens once
-	if (vboID == 0){
+	//if (vboID == 0){
+	if (changed == 1){
 		//generate a buffer object for the vboID. after this call, vboID will be a number > 0
 		glGenBuffers(1, &vboID);
 		//generate buffer object for the indices
@@ -305,40 +352,42 @@ void draw()
 
 
 		//Generate the cube's vertex data
-		BlockVertex verts[24];
-		for (int i = 0; i < 24; i++){
-			verts[i].position.x = cubeVertices[i * 3];
-			verts[i].position.y = cubeVertices[i * 3 + 1];
-			verts[i].position.z = cubeVertices[i * 3 + 2];
+		//BlockVertex verts[24];
+		//for (int i = 0; i < 24; i++){
+		//	verts[i].position.x = cubeVertices[i * 3];
+		//	verts[i].position.y = cubeVertices[i * 3 + 1];
+		//	verts[i].position.z = cubeVertices[i * 3 + 2];
 
-			verts[i].normal.x = cubeNormals[i * 3];
-			verts[i].normal.y = cubeNormals[i * 3 + 1];
-			verts[i].normal.z = cubeNormals[i * 3 + 2];
+		//	verts[i].normal.x = cubeNormals[i * 3];
+		//	verts[i].normal.y = cubeNormals[i * 3 + 1];
+		//	verts[i].normal.z = cubeNormals[i * 3 + 2];
 
-			verts[i].color[0] = 0;
-			verts[i].color[1] = 255;
-			verts[i].color[2] = 0;
-			verts[i].color[3] = 255;
+		//	verts[i].color[0] = 0;
+		//	verts[i].color[1] = 255;
+		//	verts[i].color[2] = 0;
+		//	verts[i].color[3] = 255;
 
-			verts[i].text.x = cubeTextCoords[i * 2];
-			verts[i].text.y = cubeTextCoords[i * 2 + 1];
-		}
-		
-		//the indexes for drawing the cube, it just follows the pattern (i, i+1, i+2, i+2, i+3, i) for i += 4
-		GLuint drawIndices[36] = { 0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4, 8, 9, 10, 10, 11, 8, 12, 13, 14, 14, 15, 12, 16, 17, 18, 18, 19, 16, 20, 21, 22, 22, 23, 20 };
+		//	verts[i].text.x = cubeTextCoords[i * 2];
+		//	verts[i].text.y = cubeTextCoords[i * 2 + 1];
+		//}
+		//
+		////the indexes for drawing the cube, it just follows the pattern (i, i+1, i+2, i+2, i+3, i) for i += 4
+		//GLuint drawIndices[36] = { 0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4, 8, 9, 10, 10, 11, 8, 12, 13, 14, 14, 15, 12, 16, 17, 18, 18, 19, 16, 20, 21, 22, 22, 23, 20 };
 
 		//bind the buffers into the correct slots
 		glBindBuffer(GL_ARRAY_BUFFER, vboID);
 		//this call is optional, but it makes it faster (not in this case) because it orphans any previous buffer. opengl-tutorial has details
 		//glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(verts), NULL);
 		//fill the buffer with our vertex data. This is basically a memcpy. Static draw means we change the buffer once and draw many times
-		glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
+		//glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, currentVerts.size(), &currentVerts[0], GL_STATIC_DRAW);
 
 		//now do the same thing for the elements
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementsID);
 		//glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(drawIndices), NULL);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(drawIndices), drawIndices, GL_STATIC_DRAW);
-
+		//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(drawIndices), drawIndices, GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, currentIndices.size(), &currentIndices[0], GL_STATIC_DRAW);
+		changed = false;
 	}
 	else{ //we already initialized the buffers on another frame
 		glBindBuffer(GL_ARRAY_BUFFER, vboID);
@@ -350,20 +399,10 @@ void draw()
 	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(BlockVertex), (void *)12); //vertexColor
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(BlockVertex), (void *)16); //vertexNormal
 	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(BlockVertex), (void *)28); //textureCoordinates
+	glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(BlockVertex), (void *)36); //textureCoordinates
 
 	//Finally, draw our data. The last parameter is the offset into the bound buffer
-	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, NULL);
-
-	//modelMatrix[3][0] += 1;
-	//modelMatrix[3][1] += 1;
-	//modelMatrix[3][2] += 1;
-
-	//MVP = mainCamera->projectionMatrix * mainCamera->viewMatrix * modelMatrix;
-
-	////send our uniform data, the matrix, the light position, and the texture data
-	//glUniformMatrix4fv(blockShader.mvpID, 1, GL_FALSE, &MVP[0][0]);
-
-	//glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, NULL);
+	glDrawElements(GL_TRIANGLES, currentIndices.size(), GL_UNSIGNED_INT, NULL);
 
 	blockShader.unBind();
 
@@ -375,99 +414,6 @@ void draw()
 
 	//SDL_GL_SwapWindow(mainWindow);
 }
-
-//void drawGrid()
-//{
-//	//glClearDepth(1.0);
-//	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-//
-//	//Opengl Resource for Opengl 3.3+ http://www.opengl-tutorial.org/
-//
-//	//*************** here is some example draw code. This is temporary, and should not really be used. ****************
-//	gridShader.bind();
-//
-//	glm::mat4 modelMatrix(1);
-//	//this is a fast way to set up the translation. This is equivalent to a translatef
-//	//We translate by the negative position of the camera. This causes the world to move around the camera, rather 
-//	//than the camera to move around the world.
-//	modelMatrix[3][0] = -mainCamera->position.x;
-//	modelMatrix[3][1] = -mainCamera->position.y;
-//	modelMatrix[3][2] = -mainCamera->position.z;
-//
-//	glm::mat4 MVP = mainCamera->projectionMatrix * mainCamera->viewMatrix * modelMatrix;
-//
-//	//send our uniform data, the matrix, the light position, and the texture data
-//	glUniformMatrix4fv(gridShader.mvpID, 1, GL_FALSE, &MVP[0][0]);
-//
-//	//Static variables, so they are intitialized onces and remain for the life of the program.
-//	//In reality, your meshes should be stored in a class somewhere, but this is just an example
-//	static GLuint vboID = 0;
-//	static GLuint elementsID = 0;
-//
-//	//initialize the buffer, only happens once
-//	if (vboID == 0){
-//		//generate a buffer object for the vboID. after this call, vboID will be a number > 0
-//		glGenBuffers(1, &vboID);
-//		//generate buffer object for the indices
-//		glGenBuffers(1, &elementsID);
-//
-//		//Generate the cube's vertex data
-//		
-//		GridVertex verts[2];
-//
-//		verts[0].position.x = 0;
-//		verts[0].position.y = 0;
-//		verts[0].position.z = 0;
-//
-//		verts[1].position.x = 2;
-//		verts[1].position.y = 2;
-//		verts[1].position.z = 2;
-//
-//		verts[0].color[0] = 255;
-//		verts[0].color[1] = 0;
-//		verts[0].color[2] = 0;
-//		verts[0].color[3] = 255;
-//
-//		verts[1].color[0] = 255;
-//		verts[1].color[1] = 0;
-//		verts[1].color[2] = 0;
-//		verts[1].color[3] = 255;
-//
-//		GLuint drawIndices[2] = { 0, 1 };
-//
-//		//bind the buffers into the correct slots
-//		glBindBuffer(GL_ARRAY_BUFFER, vboID);
-//		//this call is optional, but it makes it faster (not in this case) because it orphans any previous buffer. opengl-tutorial has details
-//		//glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(verts), NULL);
-//		//fill the buffer with our vertex data. This is basically a memcpy. Static draw means we change the buffer once and draw many times
-//		glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
-//
-//		//now do the same thing for the elements
-//		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementsID);
-//		//glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(drawIndices), NULL);
-//		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(drawIndices), drawIndices, GL_STATIC_DRAW);
-//
-//		cout << "Grid initialized\n";
-//	}
-//	else{ //we already initialized the buffers on another frame
-//		glBindBuffer(GL_ARRAY_BUFFER, vboID);
-//		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementsID);
-//	}
-//
-//	//set our attribute pointers using our interleaved vertex data. Last parameter is offset into the vertex
-//	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GridVertex), (void *)0); //vertexPosition
-//	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(GridVertex), (void *)12); //vertexColor
-//
-//
-//	//Finally, draw our data. The last parameter is the offset into the bound buffer
-//	//	glDrawElements(GL_LINE_STRIP, 2, GL_UNSIGNED_INT, NULL);
-//	glLineWidth(10);
-//	glDrawElements(GL_LINES, 2, GL_UNSIGNED_INT, NULL);
-//
-//	gridShader.unBind();
-//
-//	SDL_GL_SwapWindow(mainWindow);
-//}
 
 void drawGrid()
 {
@@ -486,9 +432,7 @@ void drawGrid()
 	modelMatrix[3][0] = -mainCamera->position.x;
 	modelMatrix[3][1] = -mainCamera->position.y;
 	modelMatrix[3][2] = -mainCamera->position.z;
-	//modelMatrix[3][0] = mainCamera->direction.x + -mainCamera->position.x;
-	//modelMatrix[3][1] = mainCamera->direction.y + -mainCamera->position.y;
-	//modelMatrix[3][2] = mainCamera->direction.z + -mainCamera->position.z;
+
 
 	glm::mat4 MVP = mainCamera->projectionMatrix * mainCamera->viewMatrix * modelMatrix;
 
@@ -498,97 +442,61 @@ void drawGrid()
 	//Static variables, so they are intitialized onces and remain for the life of the program.
 	//In reality, your meshes should be stored in a class somewhere, but this is just an example
 	static GLuint vboID = 0;
-	static GLuint elementsID = 0;
     static int sizeHolder = 0;
 	//initialize the buffer, only happens once
 	if (vboID == 0){
 		//generate a buffer object for the vboID. after this call, vboID will be a number > 0
 		glGenBuffers(1, &vboID);
-		//generate buffer object for the indices
-		glGenBuffers(1, &elementsID);
 
 		//Generate the cube's vertex data
+
 		GridVertex* verts;
-		//GridVertex verts[600];
-		int i = 0, w, h, l;
+		int i = 0, w, l;
 		w = gameGrid->w;
-		h = gameGrid->h;
 		l = gameGrid->l;
-		sizeHolder = ((w+1)*(h+1) + (h+1)*(l+1) + (w+1)*(l+1)) * 2;
+		sizeHolder = ((w + 1) + (l + 1)) * 2;
 		verts = new GridVertex[sizeHolder];
-		int alpha = 100;
+		int alpha = 255;
 
-		for (int j = 0; j < w+1; j++){
-			for (int k = 0; k < h+1; k++, i+=2){
-				verts[i].position.x = w - j;
-				verts[i].position.y = h - k;
-				//verts[i].position.z = -(l / 2);
-				verts[i].position.z = 0;
+		for (int j = 0; j < w + 1; j++, i += 2){
+			verts[i].position.x = w - j;
+			verts[i].position.y = 0;
+			//verts[i].position.z = -(l / 2);
+			verts[i].position.z = 0;
 
-				verts[i + 1].position.x = w - j;
-				verts[i + 1].position.y = h - k;
-				verts[i + 1].position.z = l;
+			verts[i + 1].position.x = w - j;
+			verts[i + 1].position.y = 0;
+			verts[i + 1].position.z = l;
 
-				verts[i].color[0] = 255;
-				verts[i].color[1] = 0;
-				verts[i].color[2] = 0;
-				verts[i].color[3] = alpha;
+			verts[i].color[0] = 255;
+			verts[i].color[1] = 0;
+			verts[i].color[2] = 0;
+			verts[i].color[3] = alpha;
 
-				verts[i+1].color[0] = 255;
-				verts[i+1].color[1] = 0;
-				verts[i+1].color[2] = 0;
-				verts[i+1].color[3] = alpha;
-			}
+			verts[i + 1].color[0] = 255;
+			verts[i + 1].color[1] = 0;
+			verts[i + 1].color[2] = 0;
+			verts[i + 1].color[3] = alpha;
 		}
 
-		for (int j = 0; j < h+1; j++){
-			for (int k = 0; k < l+1; k++, i += 2){
-				verts[i].position.x = 0;
-				verts[i].position.y = h - j;
-				verts[i].position.z = l - k;
+		for (int k = 0; k < l + 1; k++, i += 2){
+			verts[i].position.x = 0;
+			verts[i].position.y = 0;
+			verts[i].position.z = l - k;
 
-				verts[i + 1].position.x = w;
-				verts[i + 1].position.y = h - j;
-				verts[i + 1].position.z = l - k;
+			verts[i + 1].position.x = w;
+			verts[i + 1].position.y = 0;
+			verts[i + 1].position.z = l - k;
 
-				verts[i].color[0] = 255;
-				verts[i].color[1] = 0;
-				verts[i].color[2] = 0;
-				verts[i].color[3] = alpha;
+			verts[i].color[0] = 255;
+			verts[i].color[1] = 0;
+			verts[i].color[2] = 0;
+			verts[i].color[3] = alpha;
 
-				verts[i + 1].color[0] = 255;
-				verts[i + 1].color[1] = 0;
-				verts[i + 1].color[2] = 0;
-				verts[i + 1].color[3] = alpha;
-			}
-		}
-
-		for (int j = 0; j < w+1; j++){
-			for (int k = 0; k < l+1; k++, i += 2){
-				verts[i].position.x = w - j;
-				verts[i].position.y = 0;
-				verts[i].position.z = l - k;
-
-				verts[i + 1].position.x = w - j;
-				verts[i + 1].position.y = h;
-				verts[i + 1].position.z = l - k;
-
-				verts[i].color[0] = 255;
-				verts[i].color[1] = 0;
-				verts[i].color[2] = 0;
-				verts[i].color[3] = alpha;
-
-				verts[i + 1].color[0] = 255;
-				verts[i + 1].color[1] = 0;
-				verts[i + 1].color[2] = 0;
-				verts[i + 1].color[3] = alpha;
-			}
-		}
-
-		GLuint* drawIndices;
-		drawIndices = new GLuint[sizeHolder];
-		for (int j = 0; j < sizeHolder; j++){
-			drawIndices[j] = (GLuint)j;
+			verts[i + 1].color[0] = 255;
+			verts[i + 1].color[1] = 0;
+			verts[i + 1].color[2] = 0;
+			verts[i + 1].color[3] = alpha;
 		}
 
 		//bind the buffers into the correct slots
@@ -597,16 +505,11 @@ void drawGrid()
 		//glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(verts), NULL);
 		//fill the buffer with our vertex data. This is basically a memcpy. Static draw means we change the buffer once and draw many times
 		glBufferData(GL_ARRAY_BUFFER, sizeHolder * sizeof(GridVertex), verts, GL_STATIC_DRAW);
-
-		//now do the same thing for the elements
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementsID);
-		//glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(drawIndices), NULL);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeHolder * sizeof(GLuint), drawIndices, GL_STATIC_DRAW);
 	}
 	else{ //we already initialized the buffers on another frame
 		glBindBuffer(GL_ARRAY_BUFFER, vboID);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementsID);
 	}
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 	//set our attribute pointers using our interleaved vertex data. Last parameter is offset into the vertex
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GridVertex), (void *)0); //vertexPosition
@@ -614,10 +517,8 @@ void drawGrid()
 
 
 	//Finally, draw our data. The last parameter is the offset into the bound buffer
-//	glDrawElements(GL_LINE_STRIP, 2, GL_UNSIGNED_INT, NULL);
 	glLineWidth(1);
-	glDrawElements(GL_LINES, sizeHolder, GL_UNSIGNED_INT, NULL);
-//	glDrawElements(GL_LINES, 600, GL_UNSIGNED_INT, NULL);
+	glDrawArrays(GL_LINES, 0, sizeHolder);
 
 	gridShader.unBind();
 

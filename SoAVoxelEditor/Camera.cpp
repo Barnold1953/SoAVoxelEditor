@@ -163,27 +163,26 @@ void Camera::updateProjectionMatrix()
 
 glm::vec3 Camera::screenToWorld(glm::vec2 mouse, int width, int height)
 {
-
-    /*cout << height << " " << width << endl;
-    cout << mouse.x << " " << mouse.y << endl;
-    printf("Screen space <%f,%f>.\n", (mouse.x / (float)width - 0.5f), -(mouse.y / (float)height - 0.5f));
-    glm::vec4 rayClip((mouse.x / (float)width - 0.5f), -(mouse.y / (float)height - 0.5f), 0.0f, 1.0f);
-    glm::vec4 rayEye = glm::inverse(projectionMatrix) * rayClip;
-
-    rayEye = glm::vec4(rayEye.x, rayEye.y, rayEye.z, 1.0);
-    glm::vec3 rayWorld = glm::normalize(glm::vec3((glm::inverse(viewMatrix) * rayEye).x, (glm::inverse(viewMatrix) * rayEye).y, (glm::inverse(viewMatrix) * rayEye).z));
-
-    printf("World space <%f,%f,%f>.\n", rayWorld.x, rayWorld.y, rayWorld.z);
-*/
-
-	//followed this tutorial : http://antongerdelan.net/opengl/raycasting.html
-    float x = (2.0f * mouse.x) / width - 1.0f;
-    float y = 1.0f - (2.0f * mouse.y) / height;
-    glm::vec4 rayClip(x,y,-1.0f,1.0f);
-    glm::vec4 rayEye = glm::inverse(projectionMatrix) * rayClip;
-    rayEye = glm::vec4(rayEye.x, rayEye.y, -1.0, 0.0);
-    glm::vec3 rayWorld = glm::vec3(glm::inverse(viewMatrix) * rayEye);
-    return glm::normalize(rayWorld);
+	    /*cout << height << " " << width << endl;
+				    cout << mouse.x << " " << mouse.y << endl;
+				    printf("Screen space <%f,%f>.\n", (mouse.x / (float)width - 0.5f), -(mouse.y / (float)height - 0.5f));
+				    glm::vec4 rayClip((mouse.x / (float)width - 0.5f), -(mouse.y / (float)height - 0.5f), 0.0f, 1.0f);
+				    glm::vec4 rayEye = glm::inverse(projectionMatrix) * rayClip;
+			
+				    rayEye = glm::vec4(rayEye.x, rayEye.y, rayEye.z, 1.0);
+				    glm::vec3 rayWorld = glm::normalize(glm::vec3((glm::inverse(viewMatrix) * rayEye).x, (glm::inverse(viewMatrix) * rayEye).y, (glm::inverse(viewMatrix) * rayEye).z));
+			
+				    printf("World space <%f,%f,%f>.\n", rayWorld.x, rayWorld.y, rayWorld.z);
+				*/
+			
+					//followed this tutorial : http://antongerdelan.net/opengl/raycasting.html
+	float x = (2.0f * mouse.x) / width - 1.0f;
+	float y = 1.0f - (2.0f * mouse.y) / height;
+	glm::vec4 rayClip(x, y, -1.0f, 1.0f);
+	glm::vec4 rayEye = glm::inverse(projectionMatrix) * rayClip;
+	rayEye = glm::vec4(rayEye.x, rayEye.y, -1.0, 0.0);
+	glm::vec3 rayWorld = glm::vec3(glm::inverse(viewMatrix) * rayEye);
+	return glm::normalize(rayWorld);
 }
 
 void Camera::findIntersect(glm::vec3 direction){
@@ -196,16 +195,16 @@ void Camera::findIntersect(glm::vec3 direction){
 
 	while(i < 50.0){
 		tempV = direction * i + position;
-		//printf("Attempt at <%f,%f,%f>.\n", round(tempV.x - position.x), round(tempV.y - position.y), round(tempV.z - position.z));
-		//tempVox = gameGrid->getVoxel(round(tempV.x), round(tempV.y), round(tempV.z));
-		if (tempV.x >= 0 && tempV.y >= 0 && tempV.z >= 0){
-			//printf("getVoxel called with <%f,%f,%f>\n.", tempV.x, tempV.y, tempV.z);
+		if (tempV.x >= 0 && tempV.y >= 0){
+			tempVox = gameGrid->getVoxel(tempV.x, tempV.y, tempV.z);
+		}
+		else if (tempV.z >= 0){
+			tempV = direction * (i - .01f) + position;
 			tempVox = gameGrid->getVoxel(tempV.x, tempV.y, tempV.z);
 		}
 		else{
 			tempVox = NULL;
 		}
-		//tempVox = gameGrid->getVoxel(0,0,0);
 		
 		if (tempVox == NULL){
 			//cout << "i: " << i << endl;
@@ -215,10 +214,27 @@ void Camera::findIntersect(glm::vec3 direction){
 		}
 
 		else if (tempVox->type != '\0'){
-			cout << tempVox->type << endl;
-			tempVox->selected = !(tempVox->selected);
-			printf("Voxel at <%d,%d,%d> clicked.\n", (int)(tempV.x), (int)(tempV.y), (int)(tempV.z));
-			break;
+			if (!(Keys[SDLK_q].pr) && !(Keys[SDLK_e].pr)){
+				cout << tempVox->type << endl;
+				tempVox->selected = !(tempVox->selected);
+				printf("Voxel at <%d,%d,%d> clicked.\n", (int)(tempV.x), (int)(tempV.y), (int)(tempV.z));
+
+				break;
+			}
+			else if (Keys[SDLK_q].pr){
+				cout << tempVox->type << endl;
+				gameGrid->removeVoxel(tempV.x, tempV.y, tempV.z);
+				printf("Voxel at <%d,%d,%d> removed.\n", (int)(tempV.x), (int)(tempV.y), (int)(tempV.z));
+				break;
+			}
+			else if (Keys[SDLK_e].pr){
+				cout << tempVox->type << endl;
+				tempV = direction * (i - .01f) + position;
+				if (gameGrid->getVoxel(tempV.x, tempV.y - 1.0, tempV.z)->type != '\0'){
+					gameGrid->addVoxel(currentVox, tempV.x, tempV.y, tempV.z);
+					break;
+				}
+			}
 		}
 		i += 0.1f;
 	}

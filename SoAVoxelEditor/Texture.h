@@ -13,6 +13,7 @@ using namespace std;
 
 class texture{
 public:
-	texture(string location);
+	texture(string location, char tag);
 	GLuint data;
+	char type;
 };

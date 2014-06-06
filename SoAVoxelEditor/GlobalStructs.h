@@ -32,6 +32,11 @@ struct BlockVertex{
 	GLubyte color[4];
 	glm::vec3 normal;
 	glm::vec2 text;
+	glm::vec3 offset;
+};
+
+struct BlockMesh{
+	BlockVertex verts[24];
 };
 
 struct GridVertex{
@@ -45,19 +50,22 @@ struct voxel{
 };
 
 class grid{
-	
-
-public:
 	vector <voxel*> voxels;
+public:
 	grid(int,int,int);
 	void addVoxel(voxel*,int,int,int);
 	void removeVoxel(int, int, int);
 	voxel* getVoxel(int,int,int);
 
-	int h, w, l, layerSize;
+	int h, w, l, layerSize, vTot;
 };
 
 extern grid *gameGrid;
+extern vector <BlockVertex> currentVerts;
+extern vector <int> currentIndices;
+extern BlockMesh baseMesh;
+extern voxel *currentVox;
+extern bool changed;
 
 //here are the vertex positions for the 24 cube vertices
 static GLfloat cubeVertices[72] = { 
@@ -100,6 +108,8 @@ static float cubeTextCoords[48] = {
 
 	0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
 };
+
+
 
 
 glm::vec2 get2dPoint(glm::vec3 location, const glm::mat4 &view, const glm::mat4 &projection, int height, int width);

@@ -36,6 +36,7 @@ protected:
 class BlockShader : public Shader
 {
 public:
+	GLuint mID;
 	void initialize(string dirPath);
 	void bind();
 	void unBind();

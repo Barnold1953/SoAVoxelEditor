@@ -26,8 +26,8 @@ void main(){
     //float NdotH = dot(n, H);
 	//NdotH = clamp(NdotH, 0.0, 1.0);
 	
-	//vec3 diffuseColor = fragmentColor.rgb * cosTheta;
-    vec3 diffuseColor = texture2D(texture, tPos).rgb * cosTheta;
+	vec3 diffuseColor = texture2D(texture, tPos).rgb * cosTheta;
+    diffuseColor = fragmentColor.rgb * cosTheta;
        
     color = vec4(diffuseColor, fragmentColor.a);
 }
