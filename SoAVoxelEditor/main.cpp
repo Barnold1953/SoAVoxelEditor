@@ -220,6 +220,8 @@ void initializeVertexBuffer(){
 		baseMesh.verts[i].offset.x = 0;
 		baseMesh.verts[i].offset.y = 0;
 		baseMesh.verts[i].offset.z = 0;
+
+		baseMesh.verts[i].selected = 0.0;
 		/*baseMesh.verts[i * 24 + j].offset.x = (i % (w * l)) % l;
 		baseMesh.verts[i * 24 + j].offset.y = (i % (w * l)) / l;
 		baseMesh.verts[i * 24 + j].offset.z = i / (w * l);*/
@@ -272,6 +274,12 @@ void control()
 			break;
 		case SDL_KEYDOWN:
 			Keys[evnt.key.keysym.sym].pr = 1;
+			if (evnt.key.keysym.sym == SDLK_g){
+				cout << currentVerts.size() << endl;
+				for (int i = 0; i < currentVerts.size(); i++){
+					printf("%d <%f,%f,%f>\n", i, currentVerts[i].offset.x + currentVerts[i].position.x, currentVerts[i].offset.y + currentVerts[i].position.y, currentVerts[i].offset.z + currentVerts[i].position.z);
+				}
+			}
 			break;
 		case SDL_KEYUP:
 			Keys[evnt.key.keysym.sym].pr = 0;
@@ -317,7 +325,15 @@ void draw()
 	
 	//t key toggles between selected/not selected texture
 	//if (Keys[SDLK_t].pr == 0){
-	if (gameGrid->getVoxel(0,0,0) != NULL){
+	
+	glBindTexture(GL_TEXTURE_2D, cubeTexts['b']->data);
+	checkGlError();
+	glUniform1i(blockShader.textPosID, 0);
+	glBindTexture(GL_TEXTURE_2D, cubeSelectedTexts['b']->data);
+	checkGlError();
+	glUniform1i(blockShader.textSelPosID, 0);
+
+	/*if (gameGrid->getVoxel(0,0,0) != NULL){
 		if (gameGrid->getVoxel(0,0,0)->selected == false){
 			glBindTexture(GL_TEXTURE_2D, cubeTexts['b']->data);
 			checkGlError();
@@ -333,7 +349,7 @@ void draw()
 		glBindTexture(GL_TEXTURE_2D, cubeTexts['b']->data);
 		checkGlError();
 		glUniform1i(blockShader.textPosID, 0);
-	}
+	}*/
 
 	//glUniform1f(blockShader.selected, 1);
 
@@ -400,6 +416,7 @@ void draw()
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(BlockVertex), (void *)16); //vertexNormal
 	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(BlockVertex), (void *)28); //textureCoordinates
 	glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(BlockVertex), (void *)36); //textureCoordinates
+	glVertexAttribPointer(5, 1, GL_FLOAT, GL_FALSE, sizeof(BlockVertex), (void *)48); //textureCoordinates
 
 	//Finally, draw our data. The last parameter is the offset into the bound buffer
 	glDrawElements(GL_TRIANGLES, currentIndices.size(), GL_UNSIGNED_INT, NULL);

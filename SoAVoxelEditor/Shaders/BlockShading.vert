@@ -5,12 +5,14 @@ in vec4 vertexColor;
 in vec3 vertexNormal;
 in vec2 textCoordinate;
 in vec3 offset;
+in float textureType;
 
 
 // Output data ; will be interpolated for each fragment.
 out vec4 fragmentColor;
 out vec3 normal_worldspace;
 out vec2 tPos;
+out float tType;
 
 // Values that stay constant for the whole mesh.
 uniform mat4 VP;
@@ -31,4 +33,5 @@ void main(){
     normal_worldspace = normalize(vertexNormal);
     
 	fragmentColor = vertexColor;
+    tType = textureType;
 }

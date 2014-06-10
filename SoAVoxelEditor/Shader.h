@@ -28,6 +28,7 @@ public:
 	GLuint mvpID;
 	GLuint lightPosID;
 	GLuint textPosID;
+	GLuint textSelPosID;
 protected:
 	bool initialized;
 };

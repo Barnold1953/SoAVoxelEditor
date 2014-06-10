@@ -33,6 +33,7 @@ struct BlockVertex{
 	glm::vec3 normal;
 	glm::vec2 text;
 	glm::vec3 offset;
+	float selected;
 };
 
 struct BlockMesh{
