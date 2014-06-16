@@ -47,7 +47,7 @@ map <char, texture*> cubeTexts;
 map <char, texture*> cubeSelectedTexts;
 
 vector <BlockVertex> currentVerts;
-vector <int> currentIndices;
+vector <GLuint> currentIndices;
 BlockMesh baseMesh;
 voxel *currentVox;
 bool changed = true;
@@ -227,6 +227,19 @@ void initializeVertexBuffer(){
 		baseMesh.verts[i * 24 + j].offset.z = i / (w * l);*/
 	}
 	gameGrid->addVoxel(currentVox, 0, 0, 0);
+	gameGrid->addVoxel(currentVox, 0, 1, 0);
+	gameGrid->addVoxel(currentVox, 0, 0, 1);
+	gameGrid->addVoxel(currentVox, 1, 0, 0);
+
+	/*for (int i = 0; i < currentIndices.size(); i++){
+		printf("%d\n", currentIndices[i]);
+	}
+	cout << currentVerts.size() << endl << endl;
+	for (int i = 0; i < currentVerts.size(); i++){
+		glm::vec3 t;
+		t = currentVerts[i].position + currentVerts[i].offset;
+		printf("%d:     <%f,%f,%f>\n", i, t.x, t.y, t.z);
+	}*/
 }
 
 void initializeShaders()
@@ -280,6 +293,26 @@ void control()
 					printf("%d <%f,%f,%f>\n", i, currentVerts[i].offset.x + currentVerts[i].position.x, currentVerts[i].offset.y + currentVerts[i].position.y, currentVerts[i].offset.z + currentVerts[i].position.z);
 				}
 			}
+			if (evnt.key.keysym.sym == SDLK_i){
+				int addx, addy, addz;
+				cout << "x: ";
+				cin >> addx;
+				cout << "y: ";
+				cin >> addy;
+				cout << "z: ";
+				cin >> addz;
+				gameGrid->addVoxel(currentVox, addx, addy, addz);
+			}
+			if (evnt.key.keysym.sym == SDLK_r){
+				int rx, ry, rz;
+				cout << "x: ";
+				cin >> rx;
+				cout << "y: ";
+				cin >> ry;
+				cout << "z: ";
+				cin >> rz;
+				gameGrid->removeVoxel(rx, ry, rz);
+			}
 			break;
 		case SDL_KEYUP:
 			Keys[evnt.key.keysym.sym].pr = 0;
@@ -319,19 +352,23 @@ void draw()
 	//send our uniform data, the matrix, the light position, and the texture data
 	glUniformMatrix4fv(blockShader.mvpID, 1, GL_FALSE, &VP[0][0]);
 	glUniformMatrix4fv(blockShader.mID, 1, GL_FALSE, &M[0][0]);
-	glm::vec3 lightPos(0.1f, 0.5f, 0.8f);
+	//glm::vec3 lightPos(0.1f, 0.5f, 0.8f);
+	glm::vec3 lightPos = mainCamera->position;
 	lightPos = glm::normalize(lightPos);
 	glUniform3f(blockShader.lightPosID, lightPos.x, lightPos.y, lightPos.z);
 	
 	//t key toggles between selected/not selected texture
 	//if (Keys[SDLK_t].pr == 0){
 	
-	glBindTexture(GL_TEXTURE_2D, cubeTexts['b']->data);
-	checkGlError();
-	glUniform1i(blockShader.textPosID, 0);
-	glBindTexture(GL_TEXTURE_2D, cubeSelectedTexts['b']->data);
-	checkGlError();
-	glUniform1i(blockShader.textSelPosID, 0);
+
+
+	//this shouldn't still work!!!!
+	//glBindTexture(GL_TEXTURE_2D, cubeTexts['b']->data);
+	//checkGlError();
+	//glUniform1i(blockShader.textPosID, 0);
+	//glBindTexture(GL_TEXTURE_2D, cubeSelectedTexts['b']->data);
+	//checkGlError();
+	//glUniform1i(blockShader.textSelPosID, 0);
 
 	/*if (gameGrid->getVoxel(0,0,0) != NULL){
 		if (gameGrid->getVoxel(0,0,0)->selected == false){
@@ -368,41 +405,46 @@ void draw()
 
 
 		//Generate the cube's vertex data
-		//BlockVertex verts[24];
-		//for (int i = 0; i < 24; i++){
-		//	verts[i].position.x = cubeVertices[i * 3];
-		//	verts[i].position.y = cubeVertices[i * 3 + 1];
-		//	verts[i].position.z = cubeVertices[i * 3 + 2];
+		BlockVertex verts[24];
+		for (int i = 0; i < 24; i++){
+			verts[i].position.x = cubeVertices[i * 3];
+			verts[i].position.y = cubeVertices[i * 3 + 1];
+			verts[i].position.z = cubeVertices[i * 3 + 2];
 
-		//	verts[i].normal.x = cubeNormals[i * 3];
-		//	verts[i].normal.y = cubeNormals[i * 3 + 1];
-		//	verts[i].normal.z = cubeNormals[i * 3 + 2];
+			verts[i].normal.x = cubeNormals[i * 3];
+			verts[i].normal.y = cubeNormals[i * 3 + 1];
+			verts[i].normal.z = cubeNormals[i * 3 + 2];
 
-		//	verts[i].color[0] = 0;
-		//	verts[i].color[1] = 255;
-		//	verts[i].color[2] = 0;
-		//	verts[i].color[3] = 255;
+			verts[i].color[0] = 0;
+			verts[i].color[1] = 255;
+			verts[i].color[2] = 0;
+			verts[i].color[3] = 255;
 
-		//	verts[i].text.x = cubeTextCoords[i * 2];
-		//	verts[i].text.y = cubeTextCoords[i * 2 + 1];
-		//}
+			verts[i].text.x = cubeTextCoords[i * 2];
+			verts[i].text.y = cubeTextCoords[i * 2 + 1];
+			verts[i].selected = 0.0;
+
+			verts[i].offset.x = 0;
+			verts[i].offset.y = 0;
+			verts[i].offset.z = 0;
+		}
 		//
-		////the indexes for drawing the cube, it just follows the pattern (i, i+1, i+2, i+2, i+3, i) for i += 4
-		//GLuint drawIndices[36] = { 0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4, 8, 9, 10, 10, 11, 8, 12, 13, 14, 14, 15, 12, 16, 17, 18, 18, 19, 16, 20, 21, 22, 22, 23, 20 };
-
+		//the indexes for drawing the cube, it just follows the pattern (i, i+1, i+2, i+2, i+3, i) for i += 4
+		GLuint drawIndices[36] = { 0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4, 8, 9, 10, 10, 11, 8, 12, 13, 14, 14, 15, 12, 16, 17, 18, 18, 19, 16, 20, 21, 22, 22, 23, 20 };
+		//GLuint drawIndices[72] = { 0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4, 8, 9, 10, 10, 11, 8, 12, 13, 14, 14, 15, 12, 16, 17, 18, 18, 19, 16, 20, 21, 22, 22, 23, 20, 24, 25, 26, 26, 27, 24, 28, 29, 30, 30, 31, 28, 32, 33, 34, 34, 35, 32, 36, 37, 38, 38, 39, 36, 40, 41, 42, 42, 43, 40, 44, 45, 46, 46, 47, 44 };
 		//bind the buffers into the correct slots
 		glBindBuffer(GL_ARRAY_BUFFER, vboID);
 		//this call is optional, but it makes it faster (not in this case) because it orphans any previous buffer. opengl-tutorial has details
 		//glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(verts), NULL);
 		//fill the buffer with our vertex data. This is basically a memcpy. Static draw means we change the buffer once and draw many times
 		//glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
-		glBufferData(GL_ARRAY_BUFFER, currentVerts.size(), &currentVerts[0], GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, currentVerts.size() * sizeof(BlockVertex), &currentVerts[0], GL_STATIC_DRAW);
 
 		//now do the same thing for the elements
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementsID);
 		//glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(drawIndices), NULL);
 		//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(drawIndices), drawIndices, GL_STATIC_DRAW);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, currentIndices.size(), &currentIndices[0], GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, currentIndices.size() * sizeof(GLuint), &currentIndices[0], GL_STATIC_DRAW);
 		changed = false;
 	}
 	else{ //we already initialized the buffers on another frame
@@ -419,6 +461,7 @@ void draw()
 	glVertexAttribPointer(5, 1, GL_FLOAT, GL_FALSE, sizeof(BlockVertex), (void *)48); //textureCoordinates
 
 	//Finally, draw our data. The last parameter is the offset into the bound buffer
+	//glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, NULL);
 	glDrawElements(GL_TRIANGLES, currentIndices.size(), GL_UNSIGNED_INT, NULL);
 
 	blockShader.unBind();

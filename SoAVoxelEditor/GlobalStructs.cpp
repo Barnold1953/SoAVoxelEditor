@@ -46,6 +46,7 @@ void grid::addVoxel(voxel* newV, int x, int y, int z){
 		rangeCheck = true;
 	}
 	if (rangeCheck == true){
+		printf("range check failed\n");
 		return;
 	}
 
@@ -54,26 +55,27 @@ void grid::addVoxel(voxel* newV, int x, int y, int z){
 		tempV->type = newV->type;
 		tempV->selected = newV->selected;
 		vTot++;
+		for (int i = currentVerts.size(); i < currentVerts.size() + 24; i += 4){
+			currentIndices.push_back(i);
+			currentIndices.push_back(i + 1);
+			currentIndices.push_back(i + 2);
+			currentIndices.push_back(i + 2);
+			currentIndices.push_back(i + 3);
+			currentIndices.push_back(i);
+		}
 		for (int i = 0; i < 24; i++){
 			baseMesh.verts[i].offset.x = x;
 			baseMesh.verts[i].offset.y = y;
 			baseMesh.verts[i].offset.z = z;
+			baseMesh.verts[i].selected = 0.0;
 			currentVerts.push_back(baseMesh.verts[i]);
 		}
-		for (int i = currentVerts.size(); i < currentVerts.size() + 24;  i += 4){
-			currentIndices.push_back(i);
-			currentIndices.push_back(i+1);
-			currentIndices.push_back(i+2);
-			currentIndices.push_back(i+2);
-			currentIndices.push_back(i+3);
-			currentIndices.push_back(i);
-		}
 		changed = true;
+		printf("Voxel at <%d,%d,%d> added.\n", x, y, z);
 	}
 	else{
 		printf("Voxel space <%d,%d,%d> is occupied.\n", x, y, z);
 	}
-	printf("Voxel at <%d,%d,%d> added.\n", x, y, z);
 }
 void grid::removeVoxel(int x, int y, int z){
 	bool rangeCheck = false;
@@ -105,7 +107,8 @@ void grid::removeVoxel(int x, int y, int z){
 		for (int i = 0; i < currentVerts.size(); i++){
 			if (currentVerts[i].offset.x == x && currentVerts[i].offset.y == y && currentVerts[i].offset.z == z){
 				currentVerts.erase(currentVerts.begin() + i, currentVerts.begin() + i + 24);
-				currentIndices.erase(currentIndices.begin() + i, currentIndices.begin() + i + 24);
+				currentIndices.erase(currentIndices.begin() + (i / 24) * 36, currentIndices.begin() + (i / 24) * 36 + 36);
+				break;
 			}
 		}
 		changed = true;

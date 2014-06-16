@@ -22,13 +22,13 @@ mat4 MVP;
 
 void main(){
     tempM = M;
-    tempM[0][0] += offset.x;
-    tempM[0][1] += offset.y;
-    tempM[0][2] += offset.z;
+    //tempM[0][0] += offset.x;
+    //tempM[0][1] += offset.y;
+    //tempM[0][2] += offset.z;
     MVP = VP * tempM;
     tPos = textCoordinate;
 	// Output position of the vertex, in clip space : MVP * (position)
-	gl_Position =  MVP * vec4( vertexPosition ,1);
+	gl_Position =  MVP * vec4( vertexPosition + offset,1);
 	
     normal_worldspace = normalize(vertexNormal);
     

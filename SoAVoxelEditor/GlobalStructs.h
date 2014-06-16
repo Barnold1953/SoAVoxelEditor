@@ -63,7 +63,7 @@ public:
 
 extern grid *gameGrid;
 extern vector <BlockVertex> currentVerts;
-extern vector <int> currentIndices;
+extern vector <GLuint> currentIndices;
 extern BlockMesh baseMesh;
 extern voxel *currentVox;
 extern bool changed;

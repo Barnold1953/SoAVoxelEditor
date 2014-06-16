@@ -25,7 +25,7 @@ Camera::Camera() : pitchAngle(0), yawAngle(3*M_PI/2), direction(-1.0f, 0.0f, 0.0
 
 void Camera::update()
 {
-	const float moveSpeed = 0.5f;
+	const float moveSpeed = 0.05f;
 	if (Keys[SDLK_w].pr){
 		position += direction*moveSpeed;
 	}else if (Keys[SDLK_s].pr){
@@ -52,8 +52,6 @@ void Camera::update()
 //this function moves the camera direction when the player is dragging the camera
 void Camera::mouseMove(int relx, int rely)
 {
-
-
 	yawAngle += controlsOptions.mouseSensitivity * float(-relx) * 0.005f;
 	pitchAngle += controlsOptions.mouseSensitivity * float(-rely) * 0.005f;
 	cout << pitchAngle << " " << yawAngle << endl;
@@ -114,53 +112,6 @@ void Camera::updateProjectionMatrix()
 	projectionMatrix = glm::perspective((float)(graphicsOptions.fov), (float)graphicsOptions.screenWidth / (float)graphicsOptions.screenHeight, znear, zfar);
 }
 
-//glm::vec3 Camera::screenToWorld(glm::vec2 mouse, int width, int height)
-//{
-//	cout << height << " " << width << endl;
-//	cout << mouse.x << " " << mouse.y << endl;
-//	printf("screen space <%f,%f>\n.", (mouse.x / (float)width - 0.5f), (-mouse.y / (float)height + 0.5f));
-//	glm::vec4 rayStart(0.0f, 0.0f, -1.0f, 1.0f);
-//	//glm::vec4 rayEnd(mouse.x - ((float)width / 2), mouse.y - ((float)height / 2), 0.0, 1.0);
-//	//glm::vec4 rayStart((mouse.x / (float)width - 0.5f) * 2.0f, (mouse.y / (float)height - 0.5f) * 2.0f, -1.0f, 1.0f);
-//	glm::vec4 rayEnd((mouse.x / (float)width - 0.5f) * 2.0f, -(mouse.y / (float)height - 0.5f) * 2.0f, 0.0f, 1.0f);
-//	//glm::vec4 rayEnd((2.0f * mouse.x) / width - 1.0f, 1.0f - (2.0f * mouse.y) / height, -1.0f, 1.0f);
-//	glm::mat4 modelMatrix(1);
-//	modelMatrix[3][0] = -position.x;
-//	modelMatrix[3][1] = -position.y;
-//	modelMatrix[3][2] = -position.z;
-//
-//
-//	glm::mat4 M = glm::inverse(projectionMatrix * viewMatrix);
-//	//M = M * modelMatrix;
-//	//glm::mat4 M = projectionMatrix * viewMatrix;
-//	glm::vec4 rayStartWorld = M * rayStart;
-//	rayStartWorld /= rayStartWorld.w;
-//	glm::vec4 rayEndWorld = M * rayEnd;
-//	rayEndWorld /= rayEndWorld.w;
-//
-//	glm::vec3 rayDirWorld(rayEndWorld - rayStartWorld);
-//
-//	rayDirWorld = glm::normalize(rayDirWorld);
-//
-//	return rayDirWorld;
-//	//glm::mat4 invProj = glm::inverse(projectionMatrix);
-//	//glm::mat4 invView = glm::inverse(viewMatrix);
-//
-//	//glm::vec4 rayStartCamera = invProj * rayStart;
-//	//rayStartCamera /= rayStartCamera.w;
-//	//glm::vec4 rayStartWorld = invView * rayStartCamera;
-//	//rayStartWorld /= rayStartWorld.w;
-//	//glm::vec4 rayEndCamera = invProj * rayEnd;
-//	//rayEndCamera /= rayEndCamera.w;
-//	//glm::vec4 rayEndWorld = invView * rayEndCamera;
-//	//rayEndWorld /= rayEndWorld.w;
-//	//glm::vec3 rayDirWorld(rayEndWorld - rayStartWorld);
-//
-//	//rayDirWorld = glm::normalize(rayDirWorld);
-//
-//	//return rayDirWorld;
-//}
-
 glm::vec3 Camera::screenToWorld(glm::vec2 mouse, int width, int height)
 {
 	float x = (2.0f * mouse.x) / width - 1.0f;
@@ -185,7 +136,7 @@ void Camera::findIntersect(glm::vec3 direction){
 		if (tempV.x >= 0 && tempV.y >= 0){
 			tempVox = gameGrid->getVoxel(tempV.x, tempV.y, tempV.z);
 		}
-		else if (tempV.z >= 0){
+		else if (tempV.z - direction.z * i >= 0){
 			tempV = direction * (i - .01f) + position;
 			tempVox = gameGrid->getVoxel(tempV.x, tempV.y, tempV.z);
 		}
@@ -202,10 +153,11 @@ void Camera::findIntersect(glm::vec3 direction){
 
 		else if (tempVox->type != '\0'){
 			if (!(Keys[SDLK_q].pr) && !(Keys[SDLK_e].pr)){
+				printf("q and e are not down\n");
 				cout << tempVox->type << endl;
 				for (int i = 0; i < currentVerts.size(); i++){
-					if (currentVerts[i].offset.x == tempV.x && currentVerts[i].offset.y == tempV.y && currentVerts[i].offset.z == tempV.z){
-						if (tempVox->selected = true){
+					if ((int)currentVerts[i].offset.x == (int)tempV.x && (int)currentVerts[i].offset.y == (int)tempV.y && (int)currentVerts[i].offset.z == (int)tempV.z){
+						if (tempVox->selected == true){
 							currentVerts[i].selected = 0.0;
 						}
 						else{
@@ -214,17 +166,19 @@ void Camera::findIntersect(glm::vec3 direction){
 					}
 				}
 				tempVox->selected = !(tempVox->selected);
+				changed = true;
 				printf("Voxel at <%d,%d,%d> clicked.\n", (int)(tempV.x), (int)(tempV.y), (int)(tempV.z));
-
 				break;
 			}
 			else if (Keys[SDLK_q].pr){
+				printf("q is down\n");
 				cout << tempVox->type << endl;
 				gameGrid->removeVoxel(tempV.x, tempV.y, tempV.z);
 				printf("Voxel at <%d,%d,%d> removed.\n", (int)(tempV.x), (int)(tempV.y), (int)(tempV.z));
 				break;
 			}
 			else if (Keys[SDLK_e].pr){
+				printf("e is down\n");
 				cout << tempVox->type << endl;
 				tempV = direction * (i - .01f) + position;
 				if (gameGrid->getVoxel(tempV.x, tempV.y - 1.0, tempV.z) != NULL){
