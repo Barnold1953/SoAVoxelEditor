@@ -47,10 +47,12 @@ map <char, texture*> cubeTexts;
 map <char, texture*> cubeSelectedTexts;
 
 vector <BlockVertex> currentVerts;
-vector <GLuint> currentIndices;
+//vector <GLuint> currentIndices;
+GLuint *currentIndices;
 BlockMesh baseMesh;
 voxel *currentVox;
 bool changed = true;
+char state = 's';
 
 //vector <texture*> cubeTexts;
 //vector <texture*> cubeSelectedTexts;
@@ -71,6 +73,7 @@ int main(int argc, char **argv)
 		control();
 		update();
 		draw();
+		drawGrid();
 		
 		//TODO: FPS limiter
 	}
@@ -198,7 +201,20 @@ void initializeVertexBuffer(){
 	h = gameGrid->h;
 	l = gameGrid->l;
 	int cubeTot = w*h*l;
-	currentVerts.reserve(24 * cubeTot / 2);
+	//currentVerts.reserve(24 * cubeTot / 2);
+	currentVerts.reserve(24 * cubeTot);
+	currentIndices = new GLuint[w * h * l * 36];
+
+	int j = 0;
+	for (int i = 0; i < w*h*l * 36; i+=6){
+		currentIndices[i] = j;
+		currentIndices[i+1] = j+1;
+		currentIndices[i+2] = j+2;
+		currentIndices[i+3] = j+2;
+		currentIndices[i+4] = j+3;
+		currentIndices[i+5] = j;
+		j += 4;
+	}
 	
 	for (int i = 0; i < 24; i++){
 		baseMesh.verts[i].position.x = cubeVertices[i * 3];
@@ -217,19 +233,18 @@ void initializeVertexBuffer(){
 		baseMesh.verts[i].text.x = cubeTextCoords[i * 2];
 		baseMesh.verts[i].text.y = cubeTextCoords[i * 2 + 1];
 
-		baseMesh.verts[i].offset.x = 0;
-		baseMesh.verts[i].offset.y = 0;
-		baseMesh.verts[i].offset.z = 0;
-
 		baseMesh.verts[i].selected = 0.0;
 		/*baseMesh.verts[i * 24 + j].offset.x = (i % (w * l)) % l;
 		baseMesh.verts[i * 24 + j].offset.y = (i % (w * l)) / l;
 		baseMesh.verts[i * 24 + j].offset.z = i / (w * l);*/
 	}
-	gameGrid->addVoxel(currentVox, 0, 0, 0);
-	gameGrid->addVoxel(currentVox, 0, 1, 0);
-	gameGrid->addVoxel(currentVox, 0, 0, 1);
-	gameGrid->addVoxel(currentVox, 1, 0, 0);
+	/*for (int i = 0; i < w; i++){
+		for (int j = 0; j < h; j++){
+			for (int k = 0; k < l; k++){
+				gameGrid->addVoxel(currentVox, i, j, k);
+			}
+		}
+	}*/
 
 	/*for (int i = 0; i < currentIndices.size(); i++){
 		printf("%d\n", currentIndices[i]);
@@ -287,13 +302,44 @@ void control()
 			break;
 		case SDL_KEYDOWN:
 			Keys[evnt.key.keysym.sym].pr = 1;
-			if (evnt.key.keysym.sym == SDLK_g){
-				cout << currentVerts.size() << endl;
-				for (int i = 0; i < currentVerts.size(); i++){
-					printf("%d <%f,%f,%f>\n", i, currentVerts[i].offset.x + currentVerts[i].position.x, currentVerts[i].offset.y + currentVerts[i].position.y, currentVerts[i].offset.z + currentVerts[i].position.z);
+			switch (evnt.key.keysym.sym){
+			case SDLK_g:
+				if (gameGrid->vTot > 0){
+					cout << "Remove Start\n";
+					for (int i = 0; i < gameGrid->w; i++){
+						for (int j = 0; j < gameGrid->h; j++){
+							for (int k = 0; k < gameGrid->l; k++){
+								gameGrid->removeVoxel(i, j, k);
+							}
+						}
+					}
+					cout << "Remove end\n";
 				}
-			}
-			if (evnt.key.keysym.sym == SDLK_i){
+				else{
+					for (int i = 0; i < gameGrid->w; i++){
+						for (int j = 0; j < gameGrid->h; j++){
+							for (int k = 0; k < gameGrid->l; k++){
+								gameGrid->addVoxel(currentVox, i, j, k);
+							}
+						}
+					}
+				}
+				break;
+			case SDLK_t:
+				if (state == 's'){
+					printf("Insert mode activated\n");
+					state = 'i';
+				}
+				else if (state == 'i'){
+					printf("Remove mode activated\n");
+					state = 'r';
+				}
+				else {
+					printf("Select mode activated\n");
+					state = 's';
+				}
+				break;
+			case SDLK_i:
 				int addx, addy, addz;
 				cout << "x: ";
 				cin >> addx;
@@ -302,8 +348,8 @@ void control()
 				cout << "z: ";
 				cin >> addz;
 				gameGrid->addVoxel(currentVox, addx, addy, addz);
-			}
-			if (evnt.key.keysym.sym == SDLK_r){
+				break;
+			case SDLK_r:
 				int rx, ry, rz;
 				cout << "x: ";
 				cin >> rx;
@@ -312,8 +358,16 @@ void control()
 				cout << "z: ";
 				cin >> rz;
 				gameGrid->removeVoxel(rx, ry, rz);
+				break;
+			/*case SDLK_q:
+				rFlag = 1;
+				break;
+			case SDLK_e:
+				aFlag = 1;
+				break;*/
 			}
 			break;
+
 		case SDL_KEYUP:
 			Keys[evnt.key.keysym.sym].pr = 0;
 			break;
@@ -332,6 +386,10 @@ void draw()
 	glClearDepth(1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	if (gameGrid->vTot == 0){
+		return;
+	}
+
 	//Opengl Resource for Opengl 3.3+ http://www.opengl-tutorial.org/
 
 	//*************** here is some example draw code. This is temporary, and should not really be used. ****************
@@ -346,12 +404,10 @@ void draw()
 	modelMatrix[3][2] = -mainCamera->position.z;
 
 	//glm::mat4 MVP = mainCamera->projectionMatrix * mainCamera->viewMatrix * modelMatrix;
-	glm::mat4 VP = mainCamera->projectionMatrix * mainCamera->viewMatrix;
-	glm::mat4 M = modelMatrix;
+	glm::mat4 MVP = mainCamera->projectionMatrix * mainCamera->viewMatrix * modelMatrix;
 
 	//send our uniform data, the matrix, the light position, and the texture data
-	glUniformMatrix4fv(blockShader.mvpID, 1, GL_FALSE, &VP[0][0]);
-	glUniformMatrix4fv(blockShader.mID, 1, GL_FALSE, &M[0][0]);
+	glUniformMatrix4fv(blockShader.mvpID, 1, GL_FALSE, &MVP[0][0]);
 	//glm::vec3 lightPos(0.1f, 0.5f, 0.8f);
 	glm::vec3 lightPos = mainCamera->position;
 	lightPos = glm::normalize(lightPos);
@@ -363,12 +419,14 @@ void draw()
 
 
 	//this shouldn't still work!!!!
-	//glBindTexture(GL_TEXTURE_2D, cubeTexts['b']->data);
-	//checkGlError();
-	//glUniform1i(blockShader.textPosID, 0);
-	//glBindTexture(GL_TEXTURE_2D, cubeSelectedTexts['b']->data);
-	//checkGlError();
-	//glUniform1i(blockShader.textSelPosID, 0);
+	glBindTexture(GL_TEXTURE_2D, cubeTexts['b']->data);
+	checkGlError();
+	glUniform1i(blockShader.textPosID, 0);
+	glBindTexture(GL_TEXTURE_2D, cubeSelectedTexts['b']->data);
+	checkGlError();
+	glUniform1i(blockShader.textSelPosID, 1);
+
+
 
 	/*if (gameGrid->getVoxel(0,0,0) != NULL){
 		if (gameGrid->getVoxel(0,0,0)->selected == false){
@@ -423,10 +481,6 @@ void draw()
 			verts[i].text.x = cubeTextCoords[i * 2];
 			verts[i].text.y = cubeTextCoords[i * 2 + 1];
 			verts[i].selected = 0.0;
-
-			verts[i].offset.x = 0;
-			verts[i].offset.y = 0;
-			verts[i].offset.z = 0;
 		}
 		//
 		//the indexes for drawing the cube, it just follows the pattern (i, i+1, i+2, i+2, i+3, i) for i += 4
@@ -444,7 +498,8 @@ void draw()
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementsID);
 		//glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(drawIndices), NULL);
 		//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(drawIndices), drawIndices, GL_STATIC_DRAW);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, currentIndices.size() * sizeof(GLuint), &currentIndices[0], GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, 36 * gameGrid->vTot * sizeof(GLuint), currentIndices, GL_STATIC_DRAW);
+		//glBufferData(GL_ELEMENT_ARRAY_BUFFER, currentIndices.size() * sizeof(GLuint), &currentIndices[0], GL_STATIC_DRAW);
 		changed = false;
 	}
 	else{ //we already initialized the buffers on another frame
@@ -457,20 +512,19 @@ void draw()
 	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(BlockVertex), (void *)12); //vertexColor
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(BlockVertex), (void *)16); //vertexNormal
 	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(BlockVertex), (void *)28); //textureCoordinates
-	glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(BlockVertex), (void *)36); //textureCoordinates
-	glVertexAttribPointer(5, 1, GL_FLOAT, GL_FALSE, sizeof(BlockVertex), (void *)48); //textureCoordinates
+	glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(BlockVertex), (void *)36); //textureType
+	//glVertexAttribPointer(5, 1, GL_FLOAT, GL_FALSE, sizeof(BlockVertex), (void *)48); //textureType
 
 	//Finally, draw our data. The last parameter is the offset into the bound buffer
 	//glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, NULL);
-	glDrawElements(GL_TRIANGLES, currentIndices.size(), GL_UNSIGNED_INT, NULL);
+	//glDrawElements(GL_TRIANGLES, currentIndices.size(), GL_UNSIGNED_INT, NULL);
+	glDrawElements(GL_TRIANGLES, 36 * gameGrid->h * gameGrid->l * gameGrid->w, GL_UNSIGNED_INT, NULL);
 
 	blockShader.unBind();
 
     if (drawDebugLine){
         RenderUtil::drawLine(mainCamera, debugP1, debugP2, 255, 0, 255, 5);
     }
-
-	drawGrid();
 
 	//SDL_GL_SwapWindow(mainWindow);
 }
