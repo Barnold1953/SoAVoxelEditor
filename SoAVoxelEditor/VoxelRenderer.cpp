@@ -146,7 +146,7 @@ void VoxelRenderer::addVoxel(int x, int y, int z) {
 }
 
 void VoxelRenderer::removeVoxel(int x, int y, int z) {
-    for (int i = 0; i < _currentVerts.size(); i++){
+    for (int i = 0; i < _currentVerts.size(); i += 24){
         if (_currentVerts[i].position.x - _baseMesh.verts[i % 24].position.x == x && _currentVerts[i].position.y - _baseMesh.verts[i % 24].position.y == y && _currentVerts[i].position.z - _baseMesh.verts[i % 24].position.z == z){
 
             for (int j = 0; j < 24; j++){
