@@ -18,7 +18,7 @@ VoxelEditor::~VoxelEditor()
 
 void VoxelEditor::initialize() {
     voxelGrid = new VoxelGrid(10, 10, 10);
-    currentVoxel = new voxel;
+    currentVoxel = new Voxel;
     currentVoxel->type = 'b';
     currentVoxel->selected = false;
 }

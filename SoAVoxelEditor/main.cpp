@@ -67,7 +67,6 @@ int main(int argc, char **argv)
 		control();
 		update();
 		draw();
-		drawGrid();
 		
 		//TODO: FPS limiter
 	}
@@ -93,7 +92,7 @@ void initialize()
 	initializeVertexBuffer();
 	initializeShaders();
 	
-    TexxtureManager::loadTextures();
+    TextureManager::loadTextures();
 
     drawDebugLine = 0;
 
@@ -193,7 +192,7 @@ void initializeVertexBuffer(){
 	h = gameGrid->h;
 	l = gameGrid->l;
 	int cubeTot = w*h*l;
-	//currentVerts.reserve(24 * cubeTot / 2);
+
 	currentVerts.reserve(24 * cubeTot);
 	currentIndices = new GLuint[w * h * l * 36];
 
@@ -226,27 +225,8 @@ void initializeVertexBuffer(){
 		baseMesh.verts[i].text.y = cubeTextCoords[i * 2 + 1];
 
 		baseMesh.verts[i].selected = 0.0;
-		/*baseMesh.verts[i * 24 + j].offset.x = (i % (w * l)) % l;
-		baseMesh.verts[i * 24 + j].offset.y = (i % (w * l)) / l;
-		baseMesh.verts[i * 24 + j].offset.z = i / (w * l);*/
 	}
-	/*for (int i = 0; i < w; i++){
-		for (int j = 0; j < h; j++){
-			for (int k = 0; k < l; k++){
-				gameGrid->addVoxel(currentVox, i, j, k);
-			}
-		}
-	}*/
 
-	/*for (int i = 0; i < currentIndices.size(); i++){
-		printf("%d\n", currentIndices[i]);
-	}
-	cout << currentVerts.size() << endl << endl;
-	for (int i = 0; i < currentVerts.size(); i++){
-		glm::vec3 t;
-		t = currentVerts[i].position + currentVerts[i].offset;
-		printf("%d:     <%f,%f,%f>\n", i, t.x, t.y, t.z);
-	}*/
 }
 
 void initializeShaders()
@@ -345,12 +325,6 @@ void control()
 				cin >> rz;
 				gameGrid->removeVoxel(rx, ry, rz);
 				break;
-			/*case SDLK_q:
-				rFlag = 1;
-				break;
-			case SDLK_e:
-				aFlag = 1;
-				break;*/
 			}
 			break;
 

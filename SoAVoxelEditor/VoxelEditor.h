@@ -28,7 +28,7 @@ public:
 
 private:
 	VoxelGrid *voxelGrid; 
-    voxel *currentVoxel;
+    Voxel *currentVoxel;
 	int width, height;
 };
 

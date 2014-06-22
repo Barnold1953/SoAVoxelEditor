@@ -52,7 +52,6 @@ extern vector <BlockVertex> currentVerts;
 //extern vector <GLuint> currentIndices;
 extern GLuint *currentIndices;
 extern BlockMesh baseMesh;
-extern voxel *currentVox;
 extern bool changed, rFlag, aFlag;
 extern char state;
 

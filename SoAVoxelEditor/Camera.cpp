@@ -40,11 +40,9 @@ void Camera::update()
 	}
 
 	if (Keys[SDLK_SPACE].pr){
-		//position += glm::vec3(0.0, 1.0, 0.0)*moveSpeed;
 		position += up * moveSpeed;
 	}
 	else if (Keys[SDLK_LSHIFT].pr){
-		//position -= glm::vec3(0.0, 1.0, 0.0)* moveSpeed;
 		position -= up * moveSpeed;
 	}
 
@@ -196,7 +194,6 @@ void Camera::findIntersect(glm::vec3 direction){
 		}
 		i += 0.1f;
 	}
-	/*printf("Final attempt at <%f,%f,%f>.\n", tempV.x, tempV.y, tempV.z);
-	printf("Final attempt at <%d,%d,%d>.\n", (int)tempV.x, (int)tempV.y, (int)tempV.z);*/
+
     debugP2 = tempV;
 }
