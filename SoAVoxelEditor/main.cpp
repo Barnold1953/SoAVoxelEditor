@@ -65,7 +65,7 @@ int main(int argc, char **argv)
 	initialize();
 
 	while (gameState == PLAY){
-		if (checkGlError()){
+		if (RenderUtil::checkGlError()){
 			break;
 		}
 
@@ -395,32 +395,4 @@ void destroy()
 	SDL_GL_DeleteContext(mainOpenGLContext);
 	SDL_DestroyWindow(mainWindow);
 	SDL_Quit();
-}
-
-
-bool checkGlError(){
-	GLenum err = glGetError();
-	if (err != GL_NO_ERROR){
-		switch (err){
-		case GL_OUT_OF_MEMORY:
-			error("Out of memory! Try lowering the voxel view distance.");
-			return 1;
-		case GL_INVALID_ENUM:
-			error("GL_INVALID_ENUM - An unacceptable value is specified for an enumerated argument.");
-			return 0;
-		case GL_INVALID_VALUE:
-			error("GL_INVALID_VALUE - A numeric argument is out of range.");
-			return 0;
-		case GL_INVALID_OPERATION:
-			error("GL_INVALID_OPERATION - The specified operation is not allowed in the current state.");
-			return 0;
-		case GL_INVALID_FRAMEBUFFER_OPERATION:
-			error("The command is trying to render to or read from the framebuffer while the currently bound framebuffer is not framebuffer complete.");
-			return 0;
-		default:
-			error(("OpenGL ERROR (" + to_string(err) + string(") ")).c_str());
-			return 0;
-		}
-	}
-	return 0;
 }

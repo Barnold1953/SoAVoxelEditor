@@ -1,5 +1,6 @@
 ﻿#include "VoxelGrid.h"
 #include "Camera.h"
+#include "RenderUtil.h"
 
 
 VoxelGrid::VoxelGrid(int width, int height, int length){
@@ -239,10 +240,10 @@ void VoxelGrid::drawVoxels(Camera *camera) {
 
     //this shouldn't still work!!!!
     glBindTexture(GL_TEXTURE_2D, cubeTexts['b']->data);
-    checkGlError();
+    RenderUtil::checkGlError();
     glUniform1i(blockShader.textPosID, 0);
     glBindTexture(GL_TEXTURE_2D, cubeSelectedTexts['b']->data);
-    checkGlError();
+    RenderUtil::checkGlError();
     glUniform1i(blockShader.textSelPosID, 1);
 
 
