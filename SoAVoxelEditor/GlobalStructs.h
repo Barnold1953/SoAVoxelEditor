@@ -44,26 +44,10 @@ struct GridVertex{
 	GLubyte color[4];
 };
 
-struct voxel{
-	char type;
-	bool selected;
-};
-
-class grid{
-	vector <voxel*> voxels;
-public:
-	grid(int,int,int);
-	void addVoxel(voxel*,int,int,int);
-	void removeVoxel(int, int, int);
-	voxel* getVoxel(int,int,int);
-
-	int h, w, l, layerSize, vTot;
-};
 
 
 //We should avoid storing these as global variables.
 //Instead, lets store this stuff in the VoxelEditor class
-extern grid *gameGrid;
 extern vector <BlockVertex> currentVerts;
 //extern vector <GLuint> currentIndices;
 extern GLuint *currentIndices;
