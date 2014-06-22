@@ -245,30 +245,6 @@ void VoxelGrid::drawVoxels(Camera *camera) {
         //generate buffer object for the indices
         glGenBuffers(1, &elementsID);
 
-
-        //Generate the cube's vertex data
-        BlockVertex verts[24];
-        for (int i = 0; i < 24; i++){
-            verts[i].position.x = cubeVertices[i * 3];
-            verts[i].position.y = cubeVertices[i * 3 + 1];
-            verts[i].position.z = cubeVertices[i * 3 + 2];
-
-            verts[i].normal.x = cubeNormals[i * 3];
-            verts[i].normal.y = cubeNormals[i * 3 + 1];
-            verts[i].normal.z = cubeNormals[i * 3 + 2];
-
-            verts[i].color[0] = 0;
-            verts[i].color[1] = 255;
-            verts[i].color[2] = 0;
-            verts[i].color[3] = 255;
-
-            verts[i].text.x = cubeTextCoords[i * 2];
-            verts[i].text.y = cubeTextCoords[i * 2 + 1];
-            verts[i].selected = 0.0;
-        }
-        //
-        //the indexes for drawing the cube, it just follows the pattern (i, i+1, i+2, i+2, i+3, i) for i += 4
-        GLuint drawIndices[36] = { 0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4, 8, 9, 10, 10, 11, 8, 12, 13, 14, 14, 15, 12, 16, 17, 18, 18, 19, 16, 20, 21, 22, 22, 23, 20 };
         //bind the buffers into the correct slots
         glBindBuffer(GL_ARRAY_BUFFER, vboID);
        
