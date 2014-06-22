@@ -25,7 +25,6 @@
 
 void initialize();
 void initializeSdlOpengl();
-void initializeVertexBuffer();
 void initializeShaders();
 void control();
 void update();
@@ -42,18 +41,12 @@ SDL_GLContext mainOpenGLContext;
 
 Camera *mainCamera;
 
-vector <BlockVertex> currentVerts;
-//vector <GLuint> currentIndices;
-GLuint *currentIndices;
-BlockMesh baseMesh;
-bool changed = true;
 char state = 's';
 
 //vector <texture*> cubeTexts;
 //vector <texture*> cubeSelectedTexts;
 
 VoxelEditor voxelEditor;
-
 
 int main(int argc, char **argv)
 {
@@ -77,19 +70,18 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-
-
 void initialize()
 {
 	gameState = INITIALIZE;
 	fileManager.initialize();
 
+    //Initialize this first so that all future opengl calls are successful
+    initializeSdlOpengl();
+
 	loadOptions("Data/options.ini");
 
     voxelEditor.initialize();
-
-	initializeSdlOpengl();
-	initializeVertexBuffer();
+	
 	initializeShaders();
 	
     TextureManager::loadTextures();
@@ -186,48 +178,6 @@ void initializeSdlOpengl()
 	//initializeFrameBuffer(); //initialize our FBO
 }
 
-void initializeVertexBuffer(){
-	int w, h, l;
-	w = gameGrid->w;
-	h = gameGrid->h;
-	l = gameGrid->l;
-	int cubeTot = w*h*l;
-
-	currentVerts.reserve(24 * cubeTot);
-	currentIndices = new GLuint[w * h * l * 36];
-
-	int j = 0;
-	for (int i = 0; i < w*h*l * 36; i+=6){
-		currentIndices[i] = j;
-		currentIndices[i+1] = j+1;
-		currentIndices[i+2] = j+2;
-		currentIndices[i+3] = j+2;
-		currentIndices[i+4] = j+3;
-		currentIndices[i+5] = j;
-		j += 4;
-	}
-	
-	for (int i = 0; i < 24; i++){
-		baseMesh.verts[i].position.x = cubeVertices[i * 3];
-		baseMesh.verts[i].position.y = cubeVertices[i * 3 + 1];
-		baseMesh.verts[i].position.z = cubeVertices[i * 3 + 2];
-
-		baseMesh.verts[i].normal.x = cubeNormals[i * 3];
-		baseMesh.verts[i].normal.y = cubeNormals[i * 3 + 1];
-		baseMesh.verts[i].normal.z = cubeNormals[i * 3 + 2];
-
-		baseMesh.verts[i].color[0] = 255;
-		baseMesh.verts[i].color[1] = 0;
-		baseMesh.verts[i].color[2] = 0;
-		baseMesh.verts[i].color[3] = 255;
-
-		baseMesh.verts[i].text.x = cubeTextCoords[i * 2];
-		baseMesh.verts[i].text.y = cubeTextCoords[i * 2 + 1];
-
-		baseMesh.verts[i].selected = 0.0;
-	}
-
-}
 
 void initializeShaders()
 {

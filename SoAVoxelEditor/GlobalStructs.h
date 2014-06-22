@@ -48,11 +48,7 @@ struct GridVertex{
 
 //We should avoid storing these as global variables.
 //Instead, lets store this stuff in the VoxelEditor class
-extern vector <BlockVertex> currentVerts;
-//extern vector <GLuint> currentIndices;
-extern GLuint *currentIndices;
-extern BlockMesh baseMesh;
-extern bool changed, rFlag, aFlag;
+extern bool rFlag, aFlag;
 extern char state;
 
 //here are the vertex positions for the 24 cube vertices

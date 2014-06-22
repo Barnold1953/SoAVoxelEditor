@@ -1,5 +1,6 @@
 #include "VoxelEditor.h"
 #include "Camera.h"
+#include "VoxelRenderer.h"
 
 //
 // VoxelEditor.cpp
@@ -21,6 +22,8 @@ void VoxelEditor::initialize() {
     currentVoxel = new Voxel;
     currentVoxel->type = 'b';
     currentVoxel->selected = false;
+
+    VoxelRenderer::initialize(voxelGrid->w, voxelGrid->h, voxelGrid->l);
 }
 
 void VoxelEditor::draw(Camera *camera) {
