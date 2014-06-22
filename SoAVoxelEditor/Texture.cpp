@@ -11,7 +11,7 @@
 
 //should work with BMP, PNG, JPG, TGA, DDS, PSD, HDR
 //
-texture::texture(string location, char tag){
+Texture::Texture(string location, char tag){
 	data = SOIL_load_OGL_texture
 		(
 		location.c_str(),

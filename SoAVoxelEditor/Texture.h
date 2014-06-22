@@ -11,9 +11,9 @@
 
 using namespace std;
 
-class texture{
+class Texture{
 public:
-	texture(string location, char tag);
+	Texture(string location, char tag);
 	GLuint data;
 	char type;
 };
