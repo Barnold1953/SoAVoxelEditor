@@ -61,6 +61,9 @@ public:
 	int h, w, l, layerSize, vTot;
 };
 
+
+//We should avoid storing these as global variables.
+//Instead, lets store this stuff in the VoxelEditor class
 extern grid *gameGrid;
 extern vector <BlockVertex> currentVerts;
 extern vector <GLuint> currentIndices;
