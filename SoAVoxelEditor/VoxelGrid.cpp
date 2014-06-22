@@ -24,24 +24,17 @@ VoxelGrid::VoxelGrid(int width, int height, int length){
 
 void VoxelGrid::addVoxel(Voxel* newV, int x, int y, int z){
     Voxel *tempV = getVoxel(x, y, z);
-    BlockVertex tv;
+    
     if (tempV == NULL){
         return;
     }
+
+   
     if (tempV->type == '\0'){
+        vTot++;
         tempV->type = newV->type;
         tempV->selected = newV->selected;
-        vTot++;
-
-        for (int i = 0; i < 24; i++){
-            tv = baseMesh.verts[i];
-            tv.position.x += x;
-            tv.position.y += y;
-            tv.position.z += z;
-            tv.selected = 0.0;
-            currentVerts.push_back(tv);
-        }
-        changed = true;
+        VoxelRenderer::addVoxel(x, y, z);
     } else{
         printf("Voxel space <%d,%d,%d> is occupied.\n", x, y, z);
     }
@@ -55,22 +48,11 @@ void VoxelGrid::removeVoxel(int x, int y, int z){
     if (tempV->type == '\0'){
         printf("Nothing to remove at <%d,%d,%d>.\n", x, y, z);
     } else{
+        vTot--;
         tempV->type = '\0';
         tempV->selected = 0;
-        vTot--;
-        for (int i = 0; i < currentVerts.size(); i++){
-            if (currentVerts[i].position.x - baseMesh.verts[i % 24].position.x == x && currentVerts[i].position.y - baseMesh.verts[i % 24].position.y == y && currentVerts[i].position.z - baseMesh.verts[i % 24].position.z == z){
-             
-                for (int j = 0; j < 24; j++){
-                    currentVerts[i + j] = currentVerts[currentVerts.size() - 24 + j];
-                }
-                for (int j = 0; j < 24; j++){
-                    currentVerts.pop_back();
-                }
-                break;
-            }
-        }
-        changed = true;
+        
+        VoxelRenderer::removeVoxel(x, y, z);
     }
 }
 
@@ -203,4 +185,26 @@ void VoxelGrid::drawVoxels(Camera *camera) {
     }
 
     VoxelRenderer::drawVoxels(camera);
+}
+
+void VoxelGrid::clearGrid() {
+    cout << "Remove Start\n";
+    for (int i = 0; i < w; i++){
+        for (int j = 0; j < h; j++){
+            for (int k = 0; k < l; k++){
+                removeVoxel(i, j, k);
+            }
+        }
+    }
+    cout << "Remove end\n";
+}
+
+void VoxelGrid::fillGrid(Voxel *voxel) {
+    for (int i = 0; i < w; i++){
+        for (int j = 0; j < h; j++){
+            for (int k = 0; k < l; k++){
+                addVoxel(voxel, i, j, k);
+            }
+        }
+    }
 }

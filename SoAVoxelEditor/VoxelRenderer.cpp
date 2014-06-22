@@ -4,6 +4,7 @@
 #include "Camera.h"
 #include "RenderUtil.h"
 #include "TextureManager.h"
+#include "Voxel.h"
 
 bool VoxelRenderer::_changed;
 vector <BlockVertex> VoxelRenderer::_currentVerts;
@@ -128,4 +129,34 @@ void VoxelRenderer::drawVoxels(Camera *camera) {
     if (drawDebugLine){
         RenderUtil::drawLine(camera, debugP1, debugP2, 255, 0, 255, 5);
     }
+}
+
+void VoxelRenderer::addVoxel(int x, int y, int z) {
+    BlockVertex tv;
+
+    for (int i = 0; i < 24; i++){
+        tv = _baseMesh.verts[i];
+        tv.position.x += x;
+        tv.position.y += y;
+        tv.position.z += z;
+        tv.selected = 0.0;
+        _currentVerts.push_back(tv);
+    }
+    _changed = true;
+}
+
+void VoxelRenderer::removeVoxel(int x, int y, int z) {
+    for (int i = 0; i < _currentVerts.size(); i++){
+        if (_currentVerts[i].position.x - _baseMesh.verts[i % 24].position.x == x && _currentVerts[i].position.y - _baseMesh.verts[i % 24].position.y == y && _currentVerts[i].position.z - _baseMesh.verts[i % 24].position.z == z){
+
+            for (int j = 0; j < 24; j++){
+                _currentVerts[i + j] = _currentVerts[_currentVerts.size() - 24 + j];
+            }
+            for (int j = 0; j < 24; j++){
+                _currentVerts.pop_back();
+            }
+            break;
+        }
+    }
+    _changed = true;
 }

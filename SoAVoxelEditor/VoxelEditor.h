@@ -23,12 +23,16 @@ public:
 
 	void update();
 
-	void placeVoxels();
-	void removeVoxels();
+    void addVoxel(int, int, int);
+    void removeVoxel(int, int, int);
+
+    void cycleState();
+    void toggleFillGrid();
 
 private:
 	VoxelGrid *voxelGrid; 
     Voxel *currentVoxel;
 	int width, height;
+    char state;
 };
 

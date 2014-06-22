@@ -17,6 +17,9 @@ public:
     void drawVoxels(Camera *camera);
     void drawGrid(Camera *camera);
 
+    void clearGrid();
+    void fillGrid(Voxel *voxel); //not sure if we need this
+
     int h, w, l, layerSize, vTot;
 private:
     vector <Voxel*> voxels;

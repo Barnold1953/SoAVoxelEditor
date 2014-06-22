@@ -8,7 +8,7 @@
 // Copyright 2014 Seed Of Andromeda
 //
 
-VoxelEditor::VoxelEditor() : voxelGrid(NULL), currentVoxel(NULL)
+VoxelEditor::VoxelEditor() : voxelGrid(NULL), currentVoxel(NULL), state('s')
 {
 }
 
@@ -32,13 +32,34 @@ void VoxelEditor::draw(Camera *camera) {
 }
 
 void VoxelEditor::update() {
-
 }
 
-void VoxelEditor::placeVoxels() {
-
+void VoxelEditor::addVoxel(int x, int y, int z) {
+    voxelGrid->addVoxel(currentVoxel, x, y, z);
 }
 
-void VoxelEditor::removeVoxels() {
+void VoxelEditor::removeVoxel(int x, int y, int z) {
+    voxelGrid->removeVoxel(x, y, z);
+}
 
+void VoxelEditor::cycleState() {
+    if (state == 's'){
+        printf("Insert mode activated\n");
+        state = 'i';
+    } else if (state == 'i'){
+        printf("Remove mode activated\n");
+        state = 'r';
+    } else {
+        printf("Select mode activated\n");
+        state = 's';
+    }
+}
+
+//Couldn't think of a better name. If this is a debug function lets remove it, it doesn't seem practical
+void VoxelEditor::toggleFillGrid() {
+    if (voxelGrid->vTot > 0){
+        voxelGrid->clearGrid();
+    } else{
+        voxelGrid->fillGrid();
+    }
 }

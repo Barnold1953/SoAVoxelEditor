@@ -41,11 +41,6 @@ SDL_GLContext mainOpenGLContext;
 
 Camera *mainCamera;
 
-char state = 's';
-
-//vector <texture*> cubeTexts;
-//vector <texture*> cubeSelectedTexts;
-
 VoxelEditor voxelEditor;
 
 int main(int argc, char **argv)
@@ -220,42 +215,12 @@ void control()
 			Keys[evnt.key.keysym.sym].pr = 1;
 			switch (evnt.key.keysym.sym){
 			case SDLK_g:
-				if (gameGrid->vTot > 0){
-					cout << "Remove Start\n";
-					for (int i = 0; i < gameGrid->w; i++){
-						for (int j = 0; j < gameGrid->h; j++){
-							for (int k = 0; k < gameGrid->l; k++){
-								gameGrid->removeVoxel(i, j, k);
-							}
-						}
-					}
-					cout << "Remove end\n";
-				}
-				else{
-					for (int i = 0; i < gameGrid->w; i++){
-						for (int j = 0; j < gameGrid->h; j++){
-							for (int k = 0; k < gameGrid->l; k++){
-								gameGrid->addVoxel(currentVox, i, j, k);
-							}
-						}
-					}
-				}
+                voxelEditor.toggleFillGrid();
 				break;
 			case SDLK_t:
-				if (state == 's'){
-					printf("Insert mode activated\n");
-					state = 'i';
-				}
-				else if (state == 'i'){
-					printf("Remove mode activated\n");
-					state = 'r';
-				}
-				else {
-					printf("Select mode activated\n");
-					state = 's';
-				}
+                voxelEditor.cycleState();
 				break;
-			case SDLK_i:
+			case SDLK_i: //I dont think we need this
 				int addx, addy, addz;
 				cout << "x: ";
 				cin >> addx;
@@ -263,9 +228,9 @@ void control()
 				cin >> addy;
 				cout << "z: ";
 				cin >> addz;
-				gameGrid->addVoxel(currentVox, addx, addy, addz);
+				voxelEditor.addVoxel(addx, addy, addz);
 				break;
-			case SDLK_r:
+			case SDLK_r: //I dont think we need this
 				int rx, ry, rz;
 				cout << "x: ";
 				cin >> rx;
@@ -273,7 +238,7 @@ void control()
 				cin >> ry;
 				cout << "z: ";
 				cin >> rz;
-				gameGrid->removeVoxel(rx, ry, rz);
+				voxelEditor.removeVoxel(rx, ry, rz);
 				break;
 			}
 			break;

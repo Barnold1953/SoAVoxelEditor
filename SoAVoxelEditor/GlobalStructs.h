@@ -49,7 +49,6 @@ struct GridVertex{
 //We should avoid storing these as global variables.
 //Instead, lets store this stuff in the VoxelEditor class
 extern bool rFlag, aFlag;
-extern char state;
 
 //here are the vertex positions for the 24 cube vertices
 static GLfloat cubeVertices[72] = { 
