@@ -28,8 +28,8 @@ public:
 	void updateViewMatrix();
 	void updateProjectionMatrix();
 private:
-	float pitchAngle;
-	float yawAngle;
+	float _pitchAngle;
+	float _yawAngle;
 
 };
 

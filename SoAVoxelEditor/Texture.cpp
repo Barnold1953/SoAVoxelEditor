@@ -7,7 +7,6 @@
 #include <iostream>
 #include <vector>
 #include <fstream>
-//#include <string>
 #include "Errors.h"
 
 //should work with BMP, PNG, JPG, TGA, DDS, PSD, HDR

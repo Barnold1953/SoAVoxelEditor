@@ -30,9 +30,9 @@ public:
     void toggleFillGrid();
 
 private:
-	VoxelGrid *voxelGrid; 
-    Voxel *currentVoxel;
-	int width, height;
-    char state;
+	VoxelGrid *_voxelGrid; 
+    Voxel *_currentVoxel;
+	int _width, _height;
+    char _state;
 };
 

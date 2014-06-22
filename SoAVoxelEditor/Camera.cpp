@@ -16,7 +16,7 @@
 #include <glm\gtc\matrix_transform.hpp>
 
 //the way I am initializing the position and angles here is stupid. I calculated it by hand and wrote it down.
-Camera::Camera() : pitchAngle(0), yawAngle(3*M_PI/2), direction(-1.0f, 0.0f, 0.0f), up(0.0f, 1.0f, 0.0f), right(0.0f, 0.0f, -1.0f), position(2.0f, 0.0f, 0.5f)
+Camera::Camera() : _pitchAngle(0), _yawAngle(3*M_PI/2), direction(-1.0f, 0.0f, 0.0f), up(0.0f, 1.0f, 0.0f), right(0.0f, 0.0f, -1.0f), position(2.0f, 0.0f, 0.5f)
 {
 	updateViewMatrix();
 	updateProjectionMatrix();
@@ -52,36 +52,36 @@ void Camera::update()
 //this function moves the camera direction when the player is dragging the camera
 void Camera::mouseMove(int relx, int rely)
 {
-	yawAngle += controlsOptions.mouseSensitivity * float(-relx) * 0.005f;
-	pitchAngle += controlsOptions.mouseSensitivity * float(-rely) * 0.005f;
-	cout << pitchAngle << " " << yawAngle << endl;
+	_yawAngle += controlsOptions.mouseSensitivity * float(-relx) * 0.005f;
+	_pitchAngle += controlsOptions.mouseSensitivity * float(-rely) * 0.005f;
+	cout << _pitchAngle << " " << _yawAngle << endl;
 	//bound angles
-	if (pitchAngle > M_PI / 2.0f){
-		pitchAngle = M_PI / 2.0f;
+	if (_pitchAngle > M_PI / 2.0f){
+		_pitchAngle = M_PI / 2.0f;
 	}
-	else if (pitchAngle < -M_PI / 2.0f){
-		pitchAngle = -M_PI / 2.0f;
+	else if (_pitchAngle < -M_PI / 2.0f){
+		_pitchAngle = -M_PI / 2.0f;
 	}
 
 	//wrap angles
-	if (yawAngle > 2.0f*M_PI){
-		yawAngle = 0.0f;
+	if (_yawAngle > 2.0f*M_PI){
+		_yawAngle = 0.0f;
 	}
-	else if (yawAngle < 0.0f){
-		yawAngle = 2.0f*M_PI - 0.00001f; //for some reason it gets stuck at zero without the - 0.00001f
+	else if (_yawAngle < 0.0f){
+		_yawAngle = 2.0f*M_PI - 0.00001f; //for some reason it gets stuck at zero without the - 0.00001f
 	}
 
 	direction = glm::vec3(
-		cos(pitchAngle) * sin(yawAngle),
-		sin(pitchAngle),
-		cos(pitchAngle) * cos(yawAngle)
+		cos(_pitchAngle) * sin(_yawAngle),
+		sin(_pitchAngle),
+		cos(_pitchAngle) * cos(_yawAngle)
 		);
 
 	// Right vector
 	right = glm::vec3(
-		sin(yawAngle - 3.14f / 2.0f),
+		sin(_yawAngle - 3.14f / 2.0f),
 		0,
-		cos(yawAngle - 3.14f / 2.0f)
+		cos(_yawAngle - 3.14f / 2.0f)
 		);
 
 	up = glm::cross(right, direction);

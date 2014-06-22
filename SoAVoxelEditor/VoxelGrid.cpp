@@ -6,17 +6,17 @@
 
 
 VoxelGrid::VoxelGrid(int width, int height, int length){
-    voxels.resize(height*width*length);
+    _voxels.resize(height*width*length);
     for (int i = 0; i < height*width*length; i++){
-        voxels[i] = new Voxel;
-        voxels[i]->type = '\0';
-        voxels[i]->selected = 0;
+        _voxels[i] = new Voxel;
+        _voxels[i]->type = '\0';
+        _voxels[i]->selected = 0;
     }
-    h = height;
-    w = width;
-    l = length;
-    layerSize = w * h;
-    vTot = 0;
+    _height = height;
+    _width = width;
+    length = length;
+    _layerSize = _width * _height;
+    _vTot = 0;
 }
 
 //i*layersize + j*width + k
@@ -31,7 +31,7 @@ void VoxelGrid::addVoxel(Voxel* newV, int x, int y, int z){
 
    
     if (tempV->type == '\0'){
-        vTot++;
+        _vTot++;
         tempV->type = newV->type;
         tempV->selected = newV->selected;
         VoxelRenderer::addVoxel(x, y, z);
@@ -48,7 +48,7 @@ void VoxelGrid::removeVoxel(int x, int y, int z){
     if (tempV->type == '\0'){
         printf("Nothing to remove at <%d,%d,%d>.\n", x, y, z);
     } else{
-        vTot--;
+        _vTot--;
         tempV->type = '\0';
         tempV->selected = 0;
         
@@ -60,20 +60,20 @@ Voxel* VoxelGrid::getVoxel(int x, int y, int z){
    
     bool rangeCheck = false;
 
-    if (x < 0 || x >= w){
+    if (x < 0 || x >= _width){
         rangeCheck = true;
     }
-    if (y < 0 || y >= h){
+    if (y < 0 || y >= _height){
         rangeCheck = true;
     }
-    if (z < 0 || z >= l){
+    if (z < 0 || z >= _length){
         rangeCheck = true;
     }
     if (rangeCheck == true){
         return NULL;
     }
 
-    return voxels[z*layerSize + y*w + x];
+    return _voxels[z*_layerSize + y*_width + x];
 }
 
 void VoxelGrid::drawGrid(Camera *camera) {
@@ -111,19 +111,19 @@ void VoxelGrid::drawGrid(Camera *camera) {
         GridVertex* verts;
         int i = 0;
        
-        sizeHolder = ((w + 1) + (l + 1)) * 2;
+        sizeHolder = ((_width + 1) + (_length + 1)) * 2;
         verts = new GridVertex[sizeHolder];
         int alpha = 255;
 
-        for (int j = 0; j < w + 1; j++, i += 2){
-            verts[i].position.x = w - j;
+        for (int j = 0; j < _width + 1; j++, i += 2){
+            verts[i].position.x = _width - j;
             verts[i].position.y = 0;
            
             verts[i].position.z = 0;
 
-            verts[i + 1].position.x = w - j;
+            verts[i + 1].position.x = _width - j;
             verts[i + 1].position.y = 0;
-            verts[i + 1].position.z = l;
+            verts[i + 1].position.z = _length;
 
             verts[i].color[0] = 255;
             verts[i].color[1] = 0;
@@ -136,14 +136,14 @@ void VoxelGrid::drawGrid(Camera *camera) {
             verts[i + 1].color[3] = alpha;
         }
 
-        for (int k = 0; k < l + 1; k++, i += 2){
+        for (int k = 0; k < _length + 1; k++, i += 2){
             verts[i].position.x = 0;
             verts[i].position.y = 0;
-            verts[i].position.z = l - k;
+            verts[i].position.z = _length - k;
 
-            verts[i + 1].position.x = w;
+            verts[i + 1].position.x = _width;
             verts[i + 1].position.y = 0;
-            verts[i + 1].position.z = l - k;
+            verts[i + 1].position.z = _length - k;
 
             verts[i].color[0] = 255;
             verts[i].color[1] = 0;
@@ -180,7 +180,7 @@ void VoxelGrid::drawGrid(Camera *camera) {
 }
 
 void VoxelGrid::drawVoxels(Camera *camera) {
-    if (vTot == 0){
+    if (_vTot == 0){
         return;
     }
 
@@ -189,9 +189,9 @@ void VoxelGrid::drawVoxels(Camera *camera) {
 
 void VoxelGrid::clearGrid() {
     cout << "Remove Start\n";
-    for (int i = 0; i < w; i++){
-        for (int j = 0; j < h; j++){
-            for (int k = 0; k < l; k++){
+    for (int i = 0; i < _width; i++){
+        for (int j = 0; j < _height; j++){
+            for (int k = 0; k < _length; k++){
                 removeVoxel(i, j, k);
             }
         }
@@ -200,9 +200,9 @@ void VoxelGrid::clearGrid() {
 }
 
 void VoxelGrid::fillGrid(Voxel *voxel) {
-    for (int i = 0; i < w; i++){
-        for (int j = 0; j < h; j++){
-            for (int k = 0; k < l; k++){
+    for (int i = 0; i < _width; i++){
+        for (int j = 0; j < _height; j++){
+            for (int k = 0; k < _length; k++){
                 addVoxel(voxel, i, j, k);
             }
         }

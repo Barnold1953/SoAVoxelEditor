@@ -8,7 +8,7 @@
 // Copyright 2014 Seed Of Andromeda
 //
 
-VoxelEditor::VoxelEditor() : voxelGrid(NULL), currentVoxel(NULL), state('s')
+VoxelEditor::VoxelEditor() : _voxelGrid(NULL), _currentVoxel(NULL), _state('s')
 {
 }
 
@@ -18,48 +18,48 @@ VoxelEditor::~VoxelEditor()
 }
 
 void VoxelEditor::initialize() {
-    voxelGrid = new VoxelGrid(10, 10, 10);
-    currentVoxel = new Voxel;
-    currentVoxel->type = 'b';
-    currentVoxel->selected = false;
+    _voxelGrid = new VoxelGrid(10, 10, 10);
+    _currentVoxel = new Voxel;
+    _currentVoxel->type = 'b';
+    _currentVoxel->selected = false;
 
-    VoxelRenderer::initialize(voxelGrid->w, voxelGrid->h, voxelGrid->l);
+    VoxelRenderer::initialize(_voxelGrid->_width, _voxelGrid->_height, _voxelGrid->_length);
 }
 
 void VoxelEditor::draw(Camera *camera) {
-    voxelGrid->drawGrid(camera);
-    voxelGrid->drawVoxels(camera);
+    _voxelGrid->drawGrid(camera);
+    _voxelGrid->drawVoxels(camera);
 }
 
 void VoxelEditor::update() {
 }
 
 void VoxelEditor::addVoxel(int x, int y, int z) {
-    voxelGrid->addVoxel(currentVoxel, x, y, z);
+    _voxelGrid->addVoxel(_currentVoxel, x, y, z);
 }
 
 void VoxelEditor::removeVoxel(int x, int y, int z) {
-    voxelGrid->removeVoxel(x, y, z);
+    _voxelGrid->removeVoxel(x, y, z);
 }
 
 void VoxelEditor::cycleState() {
-    if (state == 's'){
+    if (_state == 's'){
         printf("Insert mode activated\n");
-        state = 'i';
-    } else if (state == 'i'){
+        _state = 'i';
+    } else if (_state == 'i'){
         printf("Remove mode activated\n");
-        state = 'r';
+        _state = 'r';
     } else {
         printf("Select mode activated\n");
-        state = 's';
+        _state = 's';
     }
 }
 
 //Couldn't think of a better name. If this is a debug function lets remove it, it doesn't seem practical
 void VoxelEditor::toggleFillGrid() {
-    if (voxelGrid->vTot > 0){
-        voxelGrid->clearGrid();
+    if (_voxelGrid->_vTot > 0){
+        _voxelGrid->clearGrid();
     } else{
-        voxelGrid->fillGrid();
+        _voxelGrid->fillGrid();
     }
 }
