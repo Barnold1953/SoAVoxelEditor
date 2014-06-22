@@ -1,6 +1,5 @@
 #include "VoxelEditor.h"
 #include "Camera.h"
-#include "Shader.h"
 
 //
 // VoxelEditor.cpp

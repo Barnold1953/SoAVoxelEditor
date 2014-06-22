@@ -1,6 +1,8 @@
 ﻿#include "VoxelGrid.h"
 #include "Camera.h"
 #include "RenderUtil.h"
+#include "Shader.h"
+#include "TextureManager.h"
 
 
 VoxelGrid::VoxelGrid(int width, int height, int length){
@@ -206,7 +208,7 @@ void VoxelGrid::drawGrid(Camera *camera) {
 }
 
 void VoxelGrid::drawVoxels(Camera *camera) {
-    if (voxelGrid->vTot == 0){
+    if (vTot == 0){
         return;
     }
 
@@ -239,10 +241,10 @@ void VoxelGrid::drawVoxels(Camera *camera) {
 
 
     //this shouldn't still work!!!!
-    glBindTexture(GL_TEXTURE_2D, cubeTexts['b']->data);
+    glBindTexture(GL_TEXTURE_2D, TextureManager::getCubeTexture('b')->data);
     RenderUtil::checkGlError();
     glUniform1i(blockShader.textPosID, 0);
-    glBindTexture(GL_TEXTURE_2D, cubeSelectedTexts['b']->data);
+    glBindTexture(GL_TEXTURE_2D, TextureManager::getSelectedTexture('b')->data);
     RenderUtil::checkGlError();
     glUniform1i(blockShader.textSelPosID, 1);
 
@@ -318,7 +320,7 @@ void VoxelGrid::drawVoxels(Camera *camera) {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementsID);
         //glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(drawIndices), NULL);
         //glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(drawIndices), drawIndices, GL_STATIC_DRAW);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, 36 * gameGrid->vTot * sizeof(GLuint), currentIndices, GL_STATIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, 36 * vTot * sizeof(GLuint), currentIndices, GL_STATIC_DRAW);
         //glBufferData(GL_ELEMENT_ARRAY_BUFFER, currentIndices.size() * sizeof(GLuint), &currentIndices[0], GL_STATIC_DRAW);
         changed = false;
     } else{ //we already initialized the buffers on another frame
@@ -337,12 +339,12 @@ void VoxelGrid::drawVoxels(Camera *camera) {
     //Finally, draw our data. The last parameter is the offset into the bound buffer
     //glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, NULL);
     //glDrawElements(GL_TRIANGLES, currentIndices.size(), GL_UNSIGNED_INT, NULL);
-    glDrawElements(GL_TRIANGLES, 36 * gameGrid->h * gameGrid->l * gameGrid->w, GL_UNSIGNED_INT, NULL);
+    glDrawElements(GL_TRIANGLES, 36 * h * l * w, GL_UNSIGNED_INT, NULL);
 
     blockShader.unBind();
 
     if (drawDebugLine){
-        RenderUtil::drawLine(mainCamera, debugP1, debugP2, 255, 0, 255, 5);
+        RenderUtil::drawLine(camera, debugP1, debugP2, 255, 0, 255, 5);
     }
 
     //SDL_GL_SwapWindow(mainWindow);

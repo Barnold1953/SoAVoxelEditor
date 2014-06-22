@@ -4,15 +4,6 @@
 #include "GlobalStructs.h"
 #include "Errors.h"
 
-RenderUtil::RenderUtil()
-{
-}
-
-
-RenderUtil::~RenderUtil()
-{
-}
-
 bool RenderUtil::checkGlError(){
     GLenum err = glGetError();
     if (err != GL_NO_ERROR){

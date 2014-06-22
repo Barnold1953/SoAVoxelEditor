@@ -19,19 +19,17 @@
 #include "FileManager.h"
 #include "Shader.h"
 #include "GlobalStructs.h"
-#include "Texture.h"
 #include "RenderUtil.h"
 #include "VoxelEditor.h"
+#include "TextureManager.h"
 
 void initialize();
 void initializeSdlOpengl();
 void initializeVertexBuffer();
 void initializeShaders();
-void initializeTextures();
 void control();
 void update();
 void draw();
-void drawGrid();
 void destroy();
 bool checkGlError();
 
@@ -43,9 +41,6 @@ SDL_Window *mainWindow;
 SDL_GLContext mainOpenGLContext;
 
 Camera *mainCamera;
-
-map <char, texture*> cubeTexts;
-map <char, texture*> cubeSelectedTexts;
 
 vector <BlockVertex> currentVerts;
 //vector <GLuint> currentIndices;
@@ -97,7 +92,8 @@ void initialize()
 	initializeSdlOpengl();
 	initializeVertexBuffer();
 	initializeShaders();
-	initializeTextures();
+	
+    TexxtureManager::loadTextures();
 
     drawDebugLine = 0;
 
@@ -257,12 +253,6 @@ void initializeShaders()
 {
 	blockShader.initialize("Shaders/");
 	gridShader.initialize("Shaders/");
-}
-
-void initializeTextures()
-{
-	cubeTexts.insert(make_pair('b', new texture("Data/black.png", 'b')));
-	cubeSelectedTexts.insert(make_pair('b', new texture("Data/blackSelected.png", 'b')));
 }
 
 
