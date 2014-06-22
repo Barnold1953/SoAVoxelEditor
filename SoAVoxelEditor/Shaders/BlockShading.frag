@@ -24,18 +24,18 @@ void main(){
     float cosTheta = clamp( dot( n, l ), 0,1 );
     
     float hold = tType * .000000001;
-    if (tType <= 1.0){
+    if (tType == 0.0){
         vec3 tColor = texture2D(texture, tPos).rgb * cosTheta;
         color = vec4(tColor, fragmentColor.a);
     }
-    else{
+    else if(tType == 1.0){
         vec3 tSelColor = texture2D(selTexture, tPos).rgb * cosTheta;
         color = vec4(tSelColor, fragmentColor.a);
     }
-    //else{
-    //    vec3 diffuseColor = fragmentColor.rgb * cosTheta;
-    //    color = vec4(diffuseColor, fragmentColor.a);
-    //}
+    else{
+        vec3 diffuseColor = fragmentColor.rgb * cosTheta;
+        color = vec4(diffuseColor, fragmentColor.a);
+    }
     //diffuse
     
     

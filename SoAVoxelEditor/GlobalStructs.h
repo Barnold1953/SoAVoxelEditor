@@ -32,7 +32,6 @@ struct BlockVertex{
 	GLubyte color[4];
 	glm::vec3 normal;
 	glm::vec2 text;
-	glm::vec3 offset;
 	float selected;
 };
 
@@ -66,10 +65,12 @@ public:
 //Instead, lets store this stuff in the VoxelEditor class
 extern grid *gameGrid;
 extern vector <BlockVertex> currentVerts;
-extern vector <GLuint> currentIndices;
+//extern vector <GLuint> currentIndices;
+extern GLuint *currentIndices;
 extern BlockMesh baseMesh;
 extern voxel *currentVox;
-extern bool changed;
+extern bool changed, rFlag, aFlag;
+extern char state;
 
 //here are the vertex positions for the 24 cube vertices
 static GLfloat cubeVertices[72] = { 

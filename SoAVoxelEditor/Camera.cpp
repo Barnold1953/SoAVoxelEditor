@@ -25,7 +25,7 @@ Camera::Camera() : pitchAngle(0), yawAngle(3*M_PI/2), direction(-1.0f, 0.0f, 0.0
 
 void Camera::update()
 {
-	const float moveSpeed = 0.05f;
+	const float moveSpeed = 0.5f;
 	if (Keys[SDLK_w].pr){
 		position += direction*moveSpeed;
 	}else if (Keys[SDLK_s].pr){
@@ -40,10 +40,12 @@ void Camera::update()
 	}
 
 	if (Keys[SDLK_SPACE].pr){
-		position += glm::vec3(0.0, 1.0, 0.0)*moveSpeed;
+		//position += glm::vec3(0.0, 1.0, 0.0)*moveSpeed;
+		position += up * moveSpeed;
 	}
 	else if (Keys[SDLK_LSHIFT].pr){
-		position -= glm::vec3(0.0, 1.0, 0.0)* moveSpeed;
+		//position -= glm::vec3(0.0, 1.0, 0.0)* moveSpeed;
+		position -= up * moveSpeed;
 	}
 
 	updateViewMatrix();
@@ -133,57 +135,60 @@ void Camera::findIntersect(glm::vec3 direction){
 
 	while(i < 50.0){
 		tempV = direction * i + position;
-		if (tempV.x >= 0 && tempV.y >= 0){
+		if (tempV.x >= 0 && tempV.z >= 0){
 			tempVox = gameGrid->getVoxel(tempV.x, tempV.y, tempV.z);
-		}
-		else if (tempV.z - direction.z * i >= 0){
-			tempV = direction * (i - .01f) + position;
-			tempVox = gameGrid->getVoxel(tempV.x, tempV.y, tempV.z);
-		}
-		else{
-			tempVox = NULL;
-		}
-		
-		if (tempVox == NULL){
-			//cout << "i: " << i << endl;
-			//printf("Final attempt at <%f,%f,%f>.\n", tempV.x, tempV.y, tempV.z);
-			//printf("Final attempt at <%f,%f,%f>.\n", round(tempV.x), round(tempV.y), round(tempV.z));
-			//break;
-		}
-
-		else if (tempVox->type != '\0'){
-			if (!(Keys[SDLK_q].pr) && !(Keys[SDLK_e].pr)){
-				printf("q and e are not down\n");
-				cout << tempVox->type << endl;
-				for (int i = 0; i < currentVerts.size(); i++){
-					if ((int)currentVerts[i].offset.x == (int)tempV.x && (int)currentVerts[i].offset.y == (int)tempV.y && (int)currentVerts[i].offset.z == (int)tempV.z){
-						if (tempVox->selected == true){
-							currentVerts[i].selected = 0.0;
+			if (state == 's'){
+				if (tempV.z < 0){
+					break;
+				}
+				if (tempVox != NULL){
+					if (tempVox->type != '\0'){
+						for (int i = 0; i < currentVerts.size(); i++){
+							if ((int)currentVerts[i].position.x - baseMesh.verts[i % 24].position.x == (int)tempV.x && (int)currentVerts[i].position.y - baseMesh.verts[i % 24].position.y == (int)tempV.y && (int)currentVerts[i].position.z - baseMesh.verts[i%24].position.z == (int)tempV.z){
+								if (tempVox->selected == true){
+									currentVerts[i].selected = 0.0;
+								}
+								else{
+									currentVerts[i].selected = 1.0;
+								}
+							}
 						}
-						else{
-							currentVerts[i].selected = 1.0;
-						}
+						tempVox->selected = !(tempVox->selected);
 					}
 				}
-				tempVox->selected = !(tempVox->selected);
-				changed = true;
-				printf("Voxel at <%d,%d,%d> clicked.\n", (int)(tempV.x), (int)(tempV.y), (int)(tempV.z));
-				break;
 			}
-			else if (Keys[SDLK_q].pr){
-				printf("q is down\n");
-				cout << tempVox->type << endl;
-				gameGrid->removeVoxel(tempV.x, tempV.y, tempV.z);
-				printf("Voxel at <%d,%d,%d> removed.\n", (int)(tempV.x), (int)(tempV.y), (int)(tempV.z));
-				break;
-			}
-			else if (Keys[SDLK_e].pr){
-				printf("e is down\n");
-				cout << tempVox->type << endl;
-				tempV = direction * (i - .01f) + position;
-				if (gameGrid->getVoxel(tempV.x, tempV.y - 1.0, tempV.z) != NULL){
-					if (gameGrid->getVoxel(tempV.x, tempV.y - 1.0, tempV.z)->type != '\0'){
+			else if (state == 'i'){
+				if (tempV.y < 0){
+					tempV = direction * (i - .1f) + position;
+					tempVox = gameGrid->getVoxel(tempV.x, tempV.y, tempV.z);
+					if (tempVox != NULL){
 						gameGrid->addVoxel(currentVox, tempV.x, tempV.y, tempV.z);
+						printf("addVoxel attempted at <%f,%f,%f>\n", tempV.x, tempV.y, tempV.z);
+					}
+					break;
+				}
+				else if (tempVox != NULL){
+					if (tempVox->type != '\0'){
+						tempV = direction * (i - .1f) + position;
+						tempVox = gameGrid->getVoxel(tempV.x, tempV.y, tempV.z);
+						if (tempVox != NULL){
+							if (tempVox->type == '\0'){
+								glm::vec3 apos = tempV;
+							}
+							gameGrid->addVoxel(currentVox, tempV.x, tempV.y, tempV.z);
+							printf("addVoxel attempted at <%f,%f,%f>\n", tempV.x, tempV.y, tempV.z);
+						}
+						break;
+					}
+				}
+			}
+			else if (state == 'r'){
+				if (tempV.z < 0 && direction.z < 0){
+					break;
+				}
+				if (tempVox != NULL){
+					if (tempVox->type != '\0'){
+						gameGrid->removeVoxel(tempV.x, tempV.y, tempV.z);
 						break;
 					}
 				}
