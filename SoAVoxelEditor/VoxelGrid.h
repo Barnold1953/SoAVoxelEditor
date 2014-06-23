@@ -13,10 +13,10 @@ struct Voxel;
 class VoxelGrid
 {
 public:
-    VoxelGrid(int, int, int);
-    void addVoxel(Voxel*, int, int, int);
-    void removeVoxel(int, int, int);
-    Voxel* getVoxel(int, int, int);
+    VoxelGrid(int width, int height, int length);
+    void addVoxel(Voxel* newV, int x, int y, int z);
+    void removeVoxel(int x, int y, int z);
+    Voxel* getVoxel(int x, int y, int z);
 
     void drawVoxels(Camera *camera);
     void drawGrid(Camera *camera);

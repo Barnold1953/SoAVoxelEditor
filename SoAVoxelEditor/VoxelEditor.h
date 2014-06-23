@@ -23,8 +23,8 @@ public:
 
 	void update();
 
-    void addVoxel(int, int, int);
-    void removeVoxel(int, int, int);
+    void addVoxel(int x, int y, int z);
+    void removeVoxel(int x, int y, int z);
 
     void cycleState();
     void toggleFillGrid();
