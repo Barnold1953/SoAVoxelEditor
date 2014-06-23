@@ -21,7 +21,9 @@ public:
 	void updateProjectionMatrix();
 
     //getters
-    glm::vec3 getPosition() const { return _position; }
+    inline const glm::vec3 &getPosition() const { return _position; }
+    inline const glm::mat4 &getViewMatrix() const { return _viewMatrix; }
+    inline const glm::mat4 &getProjectionMatrix() const { return _projectionMatrix; }
 
 private:
     glm::vec3 _position;

@@ -1,6 +1,4 @@
 #pragma once
-#include <GL/GL.h>
-#include <vector>
 #include "GlobalStructs.h"
 
 using namespace std;

@@ -15,7 +15,7 @@ VoxelGrid::VoxelGrid(int width, int height, int length){
     }
     _height = height;
     _width = width;
-    length = length;
+    _length = length;
     _layerSize = _width * _height;
     _vTot = 0;
 }
@@ -84,16 +84,18 @@ void VoxelGrid::drawGrid(Camera *camera) {
     //*************** here is some example draw code. This is temporary, and should not really be used. ****************
     gridShader.bind();
 
+    const glm::vec3 &position = camera->getPosition();
+
     glm::mat4 modelMatrix(1);
     //this is a fast way to set up the translation. This is equivalent to a translatef
     //We translate by the negative position of the camera. This causes the world to move around the camera, rather 
     //than the camera to move around the world.
-    modelMatrix[3][0] = -camera->_position.x;
-    modelMatrix[3][1] = -camera->_position.y;
-    modelMatrix[3][2] = -camera->_position.z;
+    modelMatrix[3][0] = -position.x;
+    modelMatrix[3][1] = -position.y;
+    modelMatrix[3][2] = -position.z;
 
 
-    glm::mat4 MVP = camera->_projectionMatrix * camera->_viewMatrix * modelMatrix;
+    glm::mat4 MVP = camera->getProjectionMatrix() * camera->getViewMatrix() * modelMatrix;
 
     //send our uniform data, the matrix, the light position, and the texture data
     glUniformMatrix4fv(gridShader.mvpID, 1, GL_FALSE, &MVP[0][0]);

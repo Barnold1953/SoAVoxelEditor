@@ -1,6 +1,7 @@
 #include "VoxelEditor.h"
 #include "Camera.h"
 #include "VoxelRenderer.h"
+#include "Voxel.h"
 
 //
 // VoxelEditor.cpp
@@ -23,7 +24,7 @@ void VoxelEditor::initialize() {
     _currentVoxel->type = 'b';
     _currentVoxel->selected = false;
 
-    VoxelRenderer::initialize(_voxelGrid->_width, _voxelGrid->_height, _voxelGrid->_length);
+    VoxelRenderer::initialize(_voxelGrid->getWidth(), _voxelGrid->getHeight(), _voxelGrid->getLength());
 }
 
 void VoxelEditor::draw(Camera *camera) {
@@ -57,10 +58,10 @@ void VoxelEditor::cycleState() {
 
 //Couldn't think of a better name. If this is a debug function lets remove it, it doesn't seem practical
 void VoxelEditor::toggleFillGrid() {
-    if (_voxelGrid->_vTot > 0){
+    if (_voxelGrid->getVTot() > 0){
         _voxelGrid->clearGrid();
     } else{
-        _voxelGrid->fillGrid();
+        _voxelGrid->fillGrid(_currentVoxel);
     }
 }
 

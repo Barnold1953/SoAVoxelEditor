@@ -24,6 +24,12 @@ public:
     void clearGrid();
     void fillGrid(Voxel *voxel); //not sure if we need this
 
+    //getters
+    int getWidth() const { return _width; }
+    int getHeight() const { return _height; }
+    int getLength() const { return _length; }
+    int getVTot() const { return _vTot; }
+
 private:
     int _height, _width, _length, _layerSize, _vTot;
     vector <Voxel*> _voxels;

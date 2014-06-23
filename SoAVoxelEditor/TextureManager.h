@@ -9,8 +9,8 @@ class TextureManager
 {
 public:
     static void loadTextures();
-    inline static Texture* getCubeTexture(char tag);
-    inline static Texture* getSelectedTexture(char tag);
+    static Texture* getCubeTexture(char tag);
+    static Texture* getSelectedTexture(char tag);
 private:
     static map <char, Texture*> cubeTextures;
     static map <char, Texture*> cubeSelectedTextures;
