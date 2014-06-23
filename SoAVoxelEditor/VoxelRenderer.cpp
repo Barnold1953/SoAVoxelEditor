@@ -63,16 +63,16 @@ void VoxelRenderer::drawVoxels(Camera *camera) {
     //this is a fast way to set up the translation. This is equivalent to a translatef
     //We translate by the negative position of the camera. This causes the world to move around the camera, rather 
     //than the camera to move around the world.
-    modelMatrix[3][0] = -camera->position.x;
-    modelMatrix[3][1] = -camera->position.y;
-    modelMatrix[3][2] = -camera->position.z;
+    modelMatrix[3][0] = -camera->_position.x;
+    modelMatrix[3][1] = -camera->_position.y;
+    modelMatrix[3][2] = -camera->_position.z;
 
-    glm::mat4 MVP = camera->projectionMatrix * camera->viewMatrix * modelMatrix;
+    glm::mat4 MVP = camera->_projectionMatrix * camera->_viewMatrix * modelMatrix;
 
     //send our uniform data, the matrix, the light position, and the texture data
     glUniformMatrix4fv(blockShader.mvpID, 1, GL_FALSE, &MVP[0][0]);
 
-    glm::vec3 lightPos = camera->position;
+    glm::vec3 lightPos = camera->_position;
     lightPos = glm::normalize(lightPos);
     glUniform3f(blockShader.lightPosID, lightPos.x, lightPos.y, lightPos.z);
 
@@ -159,4 +159,13 @@ void VoxelRenderer::removeVoxel(int x, int y, int z) {
         }
     }
     _changed = true;
+}
+
+void VoxelRenderer::selectVoxel(int x, int y, int z, bool selected) {
+    for (int i = 0; i < _currentVerts.size(); i++){
+        if ((int)_currentVerts[i].position.x - _baseMesh.verts[i % 24].position.x == x && (int)_currentVerts[i].position.y - _baseMesh.verts[i % 24].position.y == y && (int)_currentVerts[i].position.z - _baseMesh.verts[i % 24].position.z == z){
+            _currentVerts[i].selected = selected;
+            break;
+        }
+    }
 }

@@ -202,7 +202,7 @@ void control()
 			if (MouseButtons[SDL_BUTTON_LEFT]){
 				glm::vec3 temp = mainCamera->screenToWorld(glm::vec2(evnt.motion.x, evnt.motion.y), graphicsOptions.screenWidth, graphicsOptions.screenHeight);
 				printf("mouse xyz coords = <%f, %f, %f>\n", temp.x, temp.y, temp.z);
-				mainCamera->findIntersect(temp);
+				voxelEditor.findIntersect(mainCamera->getPosition(), temp);
 			}
 			break;
 		case SDL_MOUSEBUTTONUP:

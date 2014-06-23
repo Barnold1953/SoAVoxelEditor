@@ -39,12 +39,12 @@ void RenderUtil::drawLine(Camera *camera, glm::vec3 p1, glm::vec3 p2, GLubyte r,
 
     glm::mat4 modelMatrix(1);
    
-    modelMatrix[3][0] = -camera->position.x;
-    modelMatrix[3][1] = -camera->position.y;
-    modelMatrix[3][2] = -camera->position.z;
+    modelMatrix[3][0] = -camera->_position.x;
+    modelMatrix[3][1] = -camera->_position.y;
+    modelMatrix[3][2] = -camera->_position.z;
  
 
-    glm::mat4 MVP = camera->projectionMatrix * camera->viewMatrix * modelMatrix;
+    glm::mat4 MVP = camera->_projectionMatrix * camera->_viewMatrix * modelMatrix;
 
     glUniformMatrix4fv(gridShader.mvpID, 1, GL_FALSE, &MVP[0][0]);
 

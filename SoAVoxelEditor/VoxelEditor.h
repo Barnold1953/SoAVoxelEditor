@@ -29,6 +29,8 @@ public:
     void cycleState();
     void toggleFillGrid();
 
+    void findIntersect(const glm::vec3 &startPosition, const glm::vec3 &direction);
+
 private:
 	VoxelGrid *_voxelGrid; 
     Voxel *_currentVoxel;

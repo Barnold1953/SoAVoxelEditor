@@ -63,3 +63,74 @@ void VoxelEditor::toggleFillGrid() {
         _voxelGrid->fillGrid();
     }
 }
+
+
+void VoxelEditor::findIntersect(const glm::vec3 &startPosition, const glm::vec3 &direction) {
+    float i = 0.1f;
+    glm::vec3 base = direction, tempV;
+    Voxel *tempVox;
+
+    drawDebugLine = 1;
+    debugP1 = startPosition;
+
+    const float step = 0.1f;
+
+    while (i < 50.0){
+        tempV = direction * i + startPosition;
+        if (tempV.x >= 0 && tempV.z >= 0){
+            tempVox = _voxelGrid->getVoxel(tempV.x, tempV.y, tempV.z);
+
+            switch (_state) {
+            case 's':
+                if (tempV.z < 0){
+                    break;
+                }
+                if (tempVox != NULL){
+                    if (tempVox->type != '\0'){
+                        tempVox->selected = !(tempVox->selected);
+                        VoxelRenderer::selectVoxel(tempV.x, tempV.y, tempV.z, tempVox->selected);
+                    }
+                }
+                break;
+            case 'i':
+                if (tempV.y < 0){
+                    tempV = direction * (i - step) + startPosition;
+                    tempVox = _voxelGrid->getVoxel(tempV.x, tempV.y, tempV.z);
+                    if (tempVox != NULL){
+                        _voxelGrid->addVoxel(_currentVoxel, tempV.x, tempV.y, tempV.z);
+                        printf("addVoxel attempted at <%f,%f,%f>\n", tempV.x, tempV.y, tempV.z);
+                    }
+                    break;
+                } else if (tempVox != NULL){
+                    if (tempVox->type != '\0'){
+                        tempV = direction * (i - step) + startPosition;
+                        tempVox = _voxelGrid->getVoxel(tempV.x, tempV.y, tempV.z);
+                        if (tempVox != NULL){
+                            if (tempVox->type == '\0'){
+                                glm::vec3 apos = tempV;
+                            }
+                            _voxelGrid->addVoxel(_currentVoxel, tempV.x, tempV.y, tempV.z);
+                            printf("addVoxel attempted at <%f,%f,%f>\n", tempV.x, tempV.y, tempV.z);
+                        }
+                        break;
+                    }
+                }
+                break;
+            case 'r':
+                if (tempV.z < 0 && direction.z < 0){
+                    break;
+                }
+                if (tempVox != NULL){
+                    if (tempVox->type != '\0'){
+                        _voxelGrid->removeVoxel(tempV.x, tempV.y, tempV.z);
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+        i += step;
+    }
+
+    debugP2 = tempV;
+}

@@ -15,19 +15,22 @@ public:
 	void mouseMove(int relx, int rely);
 	void mouseZoom(float zoomScale);
 	glm::vec3 screenToWorld(glm::vec2 mouse, int width, int height);
-	void findIntersect(glm::vec3);
 	bool boundsCheck();
-
-	glm::vec3 position;
-	glm::vec3 direction;
-	glm::vec3 up;
-	glm::vec3 right;
-	glm::mat4 viewMatrix;
-	glm::mat4 projectionMatrix;
 
 	void updateViewMatrix();
 	void updateProjectionMatrix();
+
+    //getters
+    glm::vec3 getPosition() const { return _position; }
+
 private:
+    glm::vec3 _position;
+    glm::vec3 _direction;
+    glm::vec3 _up;
+    glm::vec3 _right;
+    glm::mat4 _viewMatrix;
+    glm::mat4 _projectionMatrix;
+
 	float _pitchAngle;
 	float _yawAngle;
 

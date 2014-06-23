@@ -1,10 +1,14 @@
 #pragma once
 #include "GlobalStructs.h"
-#include "Voxel.h"
+
 #include <iostream>
 #include <vector>
 
 using namespace std;
+
+//Forward declarations so we dont have to include camera or voxel here
+class Camera;
+struct Voxel;
 
 class VoxelGrid
 {
