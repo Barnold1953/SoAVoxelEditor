@@ -75,8 +75,9 @@ void VoxelEditor::findIntersect(const glm::vec3 &startPosition, const glm::vec3 
     debugP1 = startPosition;
 
     const float step = 0.1f;
+    const float maxStep = 50.0f;
 
-    while (i < 50.0){
+    while (i < maxStep){
         tempV = direction * i + startPosition;
         if (tempV.x >= 0 && tempV.z >= 0){
             tempVox = _voxelGrid->getVoxel(tempV.x, tempV.y, tempV.z);
@@ -84,6 +85,7 @@ void VoxelEditor::findIntersect(const glm::vec3 &startPosition, const glm::vec3 
             switch (_state) {
             case 's':
                 if (tempV.z < 0){
+                    i = maxStep; //force it to stop
                     break;
                 }
                 if (tempVox != NULL){
@@ -101,6 +103,7 @@ void VoxelEditor::findIntersect(const glm::vec3 &startPosition, const glm::vec3 
                         _voxelGrid->addVoxel(_currentVoxel, tempV.x, tempV.y, tempV.z);
                         printf("addVoxel attempted at <%f,%f,%f>\n", tempV.x, tempV.y, tempV.z);
                     }
+                    i = maxStep; //force it to stop
                     break;
                 } else if (tempVox != NULL){
                     if (tempVox->type != '\0'){
@@ -113,17 +116,20 @@ void VoxelEditor::findIntersect(const glm::vec3 &startPosition, const glm::vec3 
                             _voxelGrid->addVoxel(_currentVoxel, tempV.x, tempV.y, tempV.z);
                             printf("addVoxel attempted at <%f,%f,%f>\n", tempV.x, tempV.y, tempV.z);
                         }
+                        i = maxStep; //force it to stop
                         break;
                     }
                 }
                 break;
             case 'r':
                 if (tempV.z < 0 && direction.z < 0){
+                    i = maxStep; //force it to stop
                     break;
                 }
                 if (tempVox != NULL){
                     if (tempVox->type != '\0'){
                         _voxelGrid->removeVoxel(tempV.x, tempV.y, tempV.z);
+                        i = maxStep; //force it to stop
                         break;
                     }
                 }

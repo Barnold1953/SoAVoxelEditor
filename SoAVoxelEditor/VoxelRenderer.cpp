@@ -93,6 +93,8 @@ void VoxelRenderer::drawVoxels(Camera *camera) {
     static GLuint vboID = 0;
     static GLuint elementsID = 0;
 
+    const int numIndices = (6 * _currentVerts.size()) / 4;
+
     //initialize the buffer, only happens once
     if (_changed == true){
         //generate a buffer object for the vboID. after this call, vboID will be a number > 0
@@ -109,7 +111,7 @@ void VoxelRenderer::drawVoxels(Camera *camera) {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementsID);
 
         //Don't need vTot, just use the ratio of indices to verts, which is 6/4
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 / 4 * _currentVerts.size() * sizeof(GLuint), _currentIndices, GL_STATIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, numIndices * sizeof(GLuint), _currentIndices, GL_STATIC_DRAW);
 
         _changed = false;
     } else{ //we already initialized the buffers on another frame
@@ -125,7 +127,7 @@ void VoxelRenderer::drawVoxels(Camera *camera) {
     glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(BlockVertex), (void *)36); //textureType
 
     //Finally, draw our data. The last parameter is the offset into the bound buffer
-    glDrawElements(GL_TRIANGLES, 6 / 4 * _currentVerts.size(), GL_UNSIGNED_INT, NULL);
+    glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, NULL);
 
     blockShader.unBind();
 
