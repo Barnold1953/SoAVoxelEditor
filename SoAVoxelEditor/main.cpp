@@ -201,7 +201,6 @@ void control()
 			MouseButtons[evnt.button.button] = 1;
 			if (MouseButtons[SDL_BUTTON_LEFT]){
 				glm::vec3 temp = mainCamera->screenToWorld(glm::vec2(evnt.motion.x, evnt.motion.y), graphicsOptions.screenWidth, graphicsOptions.screenHeight);
-				printf("mouse xyz coords = <%f, %f, %f>\n", temp.x, temp.y, temp.z);
 				voxelEditor.findIntersect(mainCamera->getPosition(), temp);
 			}
 			break;
@@ -214,31 +213,20 @@ void control()
 		case SDL_KEYDOWN:
 			Keys[evnt.key.keysym.sym].pr = 1;
 			switch (evnt.key.keysym.sym){
-			case SDLK_g:
-                voxelEditor.toggleFillGrid();
-				break;
 			case SDLK_t:
                 voxelEditor.cycleState();
 				break;
-			case SDLK_i: //I dont think we need this
-				int addx, addy, addz;
-				cout << "x: ";
-				cin >> addx;
-				cout << "y: ";
-				cin >> addy;
-				cout << "z: ";
-				cin >> addz;
-				voxelEditor.addVoxel(addx, addy, addz);
+			case SDLK_z:
+				if (Keys[SDLK_LCTRL].pr == 1){
+					printf("undo called\n");
+					voxelEditor.undo();
+				}
 				break;
-			case SDLK_r: //I dont think we need this
-				int rx, ry, rz;
-				cout << "x: ";
-				cin >> rx;
-				cout << "y: ";
-				cin >> ry;
-				cout << "z: ";
-				cin >> rz;
-				voxelEditor.removeVoxel(rx, ry, rz);
+			case SDLK_y:
+				if (Keys[SDLK_LCTRL].pr == 1){
+					printf("redo called\n");
+					voxelEditor.redo();
+				}
 				break;
 			}
 			break;

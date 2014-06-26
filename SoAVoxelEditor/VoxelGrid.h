@@ -14,15 +14,12 @@ class VoxelGrid
 {
 public:
     VoxelGrid(int width, int height, int length);
-    void addVoxel(Voxel* newV, int x, int y, int z);
-    void removeVoxel(int x, int y, int z);
+    bool addVoxel(Voxel* newV, int x, int y, int z);//changed these to bools so editor knows if a command needs to be added to the command stack
+    bool removeVoxel(int x, int y, int z);
     Voxel* getVoxel(int x, int y, int z);
 
     void drawVoxels(Camera *camera);
     void drawGrid(Camera *camera);
-
-    void clearGrid();
-    void fillGrid(Voxel *voxel); //not sure if we need this
 
     //getters
     int getWidth() const { return _width; }

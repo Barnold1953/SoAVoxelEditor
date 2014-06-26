@@ -23,11 +23,11 @@ VoxelGrid::VoxelGrid(int width, int height, int length){
 //i*layersize + j*width + k
 //Y, Z, X basically‏
 
-void VoxelGrid::addVoxel(Voxel* newV, int x, int y, int z){
+bool VoxelGrid::addVoxel(Voxel* newV, int x, int y, int z){
     Voxel *tempV = getVoxel(x, y, z);
     
     if (tempV == NULL){
-        return;
+        return 0;
     }
 
    
@@ -36,18 +36,21 @@ void VoxelGrid::addVoxel(Voxel* newV, int x, int y, int z){
         tempV->type = newV->type;
         tempV->selected = newV->selected;
         VoxelRenderer::addVoxel(x, y, z);
+		return 1;
     } else{
         printf("Voxel space <%d,%d,%d> is occupied.\n", x, y, z);
+		return 0;
     }
 }
 
-void VoxelGrid::removeVoxel(int x, int y, int z){
+bool VoxelGrid::removeVoxel(int x, int y, int z){
     Voxel *tempV = getVoxel(x, y, z);
     if (tempV == NULL){
-        return;
+        return 0;
     }
     if (tempV->type == '\0'){
         printf("Nothing to remove at <%d,%d,%d>.\n", x, y, z);
+		return 0;
     } else{
         _vTot--;
         tempV->type = '\0';
@@ -55,6 +58,7 @@ void VoxelGrid::removeVoxel(int x, int y, int z){
         
         VoxelRenderer::removeVoxel(x, y, z);
     }
+	return 1;
 }
 
 Voxel* VoxelGrid::getVoxel(int x, int y, int z){
@@ -188,26 +192,4 @@ void VoxelGrid::drawVoxels(Camera *camera) {
     }
 
     VoxelRenderer::drawVoxels(camera);
-}
-
-void VoxelGrid::clearGrid() {
-    cout << "Remove Start\n";
-    for (int i = 0; i < _width; i++){
-        for (int j = 0; j < _height; j++){
-            for (int k = 0; k < _length; k++){
-                removeVoxel(i, j, k);
-            }
-        }
-    }
-    cout << "Remove end\n";
-}
-
-void VoxelGrid::fillGrid(Voxel *voxel) {
-    for (int i = 0; i < _width; i++){
-        for (int j = 0; j < _height; j++){
-            for (int k = 0; k < _length; k++){
-                addVoxel(voxel, i, j, k);
-            }
-        }
-    }
 }

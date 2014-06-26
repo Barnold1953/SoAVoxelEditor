@@ -8,11 +8,11 @@ using namespace std;
 struct VoxelType
 {
     string name;
-    GLubyte color[4];
 };
 
 //Grid voxel
 struct Voxel{
     char type;
     bool selected;
+	GLubyte color[4];
 };

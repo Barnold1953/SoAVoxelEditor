@@ -36,11 +36,33 @@ void VoxelEditor::update() {
 }
 
 void VoxelEditor::addVoxel(int x, int y, int z) {
-    _voxelGrid->addVoxel(_currentVoxel, x, y, z);
+	if (_voxelGrid->addVoxel(_currentVoxel, x, y, z) == 1){
+		map<char, command> *tempComList = new map<char, command>;
+		command c;
+		c.type = 'i';
+		c.coord.x = x;
+		c.coord.y = y;
+		c.coord.z = z;
+		c.v = _currentVoxel;
+		tempComList->insert(make_pair('i', c));
+		_commandStack.push_back(tempComList);
+		_fluxStack.clear();
+	}
 }
 
 void VoxelEditor::removeVoxel(int x, int y, int z) {
-    _voxelGrid->removeVoxel(x, y, z);
+	if (_voxelGrid->removeVoxel(x, y, z) == 1){
+		map<char, command> *tempComList = new map<char, command>;
+		command c;
+		c.type = 'r';
+		c.coord.x = x;
+		c.coord.y = y;
+		c.coord.z = z;
+		c.v = _currentVoxel;
+		tempComList->insert(make_pair('r', c));
+		_commandStack.push_back(tempComList);
+		_fluxStack.clear();
+	}
 }
 
 void VoxelEditor::cycleState() {
@@ -55,16 +77,6 @@ void VoxelEditor::cycleState() {
         _state = 's';
     }
 }
-
-//Couldn't think of a better name. If this is a debug function lets remove it, it doesn't seem practical
-void VoxelEditor::toggleFillGrid() {
-    if (_voxelGrid->getVTot() > 0){
-        _voxelGrid->clearGrid();
-    } else{
-        _voxelGrid->fillGrid(_currentVoxel);
-    }
-}
-
 
 void VoxelEditor::findIntersect(const glm::vec3 &startPosition, const glm::vec3 &direction) {
     float i = 0.1f;
@@ -100,8 +112,7 @@ void VoxelEditor::findIntersect(const glm::vec3 &startPosition, const glm::vec3 
                     tempV = direction * (i - step) + startPosition;
                     tempVox = _voxelGrid->getVoxel(tempV.x, tempV.y, tempV.z);
                     if (tempVox != NULL){
-                        _voxelGrid->addVoxel(_currentVoxel, tempV.x, tempV.y, tempV.z);
-                        printf("addVoxel attempted at <%f,%f,%f>\n", tempV.x, tempV.y, tempV.z);
+                        addVoxel(tempV.x, tempV.y, tempV.z);
                     }
                     i = maxStep; //force it to stop
                     break;
@@ -113,8 +124,7 @@ void VoxelEditor::findIntersect(const glm::vec3 &startPosition, const glm::vec3 
                             if (tempVox->type == '\0'){
                                 glm::vec3 apos = tempV;
                             }
-                            _voxelGrid->addVoxel(_currentVoxel, tempV.x, tempV.y, tempV.z);
-                            printf("addVoxel attempted at <%f,%f,%f>\n", tempV.x, tempV.y, tempV.z);
+                            addVoxel(tempV.x, tempV.y, tempV.z);
                         }
                         i = maxStep; //force it to stop
                         break;
@@ -128,7 +138,7 @@ void VoxelEditor::findIntersect(const glm::vec3 &startPosition, const glm::vec3 
                 }
                 if (tempVox != NULL){
                     if (tempVox->type != '\0'){
-                        _voxelGrid->removeVoxel(tempV.x, tempV.y, tempV.z);
+                        removeVoxel(tempV.x, tempV.y, tempV.z);
                         i = maxStep; //force it to stop
                         break;
                     }
@@ -140,4 +150,78 @@ void VoxelEditor::findIntersect(const glm::vec3 &startPosition, const glm::vec3 
     }
 
     debugP2 = tempV;
+}
+
+//a more functionality is added, more cases need to be created for undo/redo
+void VoxelEditor::newCommand(map<char, command> *lCom){
+	_commandStack.push_back(lCom);
+}
+
+void VoxelEditor::execute(map<char, command> *lCom){
+	map<char, command>::iterator it;
+
+	for (it = lCom->begin(); it != lCom->end(); it++){
+		switch (it->first)
+		{
+		case 'i':
+			_voxelGrid->removeVoxel(it->second.coord.x, it->second.coord.y, it->second.coord.z);
+			printf("executing remove\n");
+			break;
+		case 'r':
+			_voxelGrid->addVoxel(it->second.v, it->second.coord.x, it->second.coord.y, it->second.coord.z);
+			printf("executing insert\n");
+			break;
+		}
+	}
+}
+
+void VoxelEditor::undo(){
+	if (_commandStack.size() < 1){
+		printf("_commandStack is empty\n");
+		return;
+	}
+
+	map<char, command> *lCom, *newCom;
+	map<char, command>::iterator it;
+
+	newCom = new map<char, command>;
+	lCom = _commandStack[_commandStack.size() - 1];
+	execute(lCom);
+
+	for (it = lCom->begin(); it != lCom->end(); it++){
+		if (it->first == 'i'){
+			newCom->insert(make_pair('r', it->second));
+		}
+		else if (it->first == 'r'){
+			newCom->insert(make_pair('i', it->second));
+		}
+	}
+	
+	_fluxStack.push_back(newCom);
+	_commandStack.pop_back();
+}
+
+void VoxelEditor::redo(){
+	if (_fluxStack.size() < 1){
+		printf("_fluxStack is empty\n");
+		return;
+	}
+	map<char, command> *lCom, *newCom;
+	map<char, command>::iterator it;
+
+	newCom = new map<char, command>;
+	lCom = _fluxStack[_fluxStack.size() - 1];
+	execute(lCom);
+
+	for (it = lCom->begin(); it != lCom->end(); it++){
+		if (it->first == 'i'){
+			newCom->insert(make_pair('r', it->second));
+		}
+		else if (it->first == 'r'){
+			newCom->insert(make_pair('i', it->second));
+		}
+	}
+
+	_commandStack.push_back(newCom);
+	_fluxStack.pop_back();
 }
