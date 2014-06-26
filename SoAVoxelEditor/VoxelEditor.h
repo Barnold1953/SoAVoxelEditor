@@ -37,10 +37,10 @@ public:
     void cycleState();
     void toggleFillGrid();
 	
-	void newCommand(map<char, command> *lCom);//I use map since when we have brushes you will want to change more than one voxel with an undo/redo call
+	void newCommand(vector <command *> lCom);//I use vectors since when we have brushes you will want to change more than one voxel with an undo/redo call
 	void undo();
 	void redo();
-	void execute(map<char, command> *lCom);
+	void execute(vector <command *> lCom);
 
     void findIntersect(const glm::vec3 &startPosition, const glm::vec3 &direction);
 
@@ -49,6 +49,6 @@ private:
     Voxel *_currentVoxel;
 	int _width, _height;
     char _state;
-	vector < map<char, command> *> _commandStack, _fluxStack;
+	vector < vector <command *> > _commandStack, _fluxStack;
 };
 

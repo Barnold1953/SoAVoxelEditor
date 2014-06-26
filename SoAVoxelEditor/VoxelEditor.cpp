@@ -37,31 +37,29 @@ void VoxelEditor::update() {
 
 void VoxelEditor::addVoxel(int x, int y, int z) {
 	if (_voxelGrid->addVoxel(_currentVoxel, x, y, z) == 1){
-		map<char, command> *tempComList = new map<char, command>;
-		command c;
-		c.type = 'i';
-		c.coord.x = x;
-		c.coord.y = y;
-		c.coord.z = z;
-		c.v = _currentVoxel;
-		tempComList->insert(make_pair('i', c));
-		_commandStack.push_back(tempComList);
-		_fluxStack.clear();
+		vector <command *> tempComList;
+		command *c = new command;
+		c->type = 'i';
+		c->coord.x = x;
+		c->coord.y = y;
+		c->coord.z = z;
+		c->v = _currentVoxel;
+		tempComList.push_back(c);
+		newCommand(tempComList);
 	}
 }
 
 void VoxelEditor::removeVoxel(int x, int y, int z) {
 	if (_voxelGrid->removeVoxel(x, y, z) == 1){
-		map<char, command> *tempComList = new map<char, command>;
-		command c;
-		c.type = 'r';
-		c.coord.x = x;
-		c.coord.y = y;
-		c.coord.z = z;
-		c.v = _currentVoxel;
-		tempComList->insert(make_pair('r', c));
-		_commandStack.push_back(tempComList);
-		_fluxStack.clear();
+		vector <command *> tempComList;
+		command *c = new command;
+		c->type = 'r';
+		c->coord.x = x;
+		c->coord.y = y;
+		c->coord.z = z;
+		c->v = _currentVoxel;
+		tempComList.push_back(c);
+		newCommand(tempComList);
 	}
 }
 
@@ -153,22 +151,26 @@ void VoxelEditor::findIntersect(const glm::vec3 &startPosition, const glm::vec3 
 }
 
 //a more functionality is added, more cases need to be created for undo/redo
-void VoxelEditor::newCommand(map<char, command> *lCom){
+void VoxelEditor::newCommand(vector <command *> lCom){
 	_commandStack.push_back(lCom);
+	for (int i = 0; i < _fluxStack.size(); i++){
+		for (int j = 0; j < _fluxStack[i].size(); j++){
+			delete _fluxStack[i][j];
+		}
+	}
+	_fluxStack.clear();
 }
 
-void VoxelEditor::execute(map<char, command> *lCom){
-	map<char, command>::iterator it;
-
-	for (it = lCom->begin(); it != lCom->end(); it++){
-		switch (it->first)
+void VoxelEditor::execute(vector <command *> lCom){
+	for (int i = 0; i < lCom.size(); i++){
+		switch (lCom[i]->type)
 		{
 		case 'i':
-			_voxelGrid->removeVoxel(it->second.coord.x, it->second.coord.y, it->second.coord.z);
+			_voxelGrid->removeVoxel(lCom[i]->coord.x, lCom[i]->coord.y, lCom[i]->coord.z);
 			printf("executing remove\n");
 			break;
 		case 'r':
-			_voxelGrid->addVoxel(it->second.v, it->second.coord.x, it->second.coord.y, it->second.coord.z);
+			_voxelGrid->addVoxel(lCom[i]->v, lCom[i]->coord.x, lCom[i]->coord.y, lCom[i]->coord.z);
 			printf("executing insert\n");
 			break;
 		}
@@ -181,23 +183,21 @@ void VoxelEditor::undo(){
 		return;
 	}
 
-	map<char, command> *lCom, *newCom;
-	map<char, command>::iterator it;
+	vector <command *> lCom;
 
-	newCom = new map<char, command>;
 	lCom = _commandStack[_commandStack.size() - 1];
 	execute(lCom);
 
-	for (it = lCom->begin(); it != lCom->end(); it++){
-		if (it->first == 'i'){
-			newCom->insert(make_pair('r', it->second));
+	for (int i = 0; i < lCom.size(); i++){
+		if (lCom[i]->type == 'i'){
+			lCom[i]->type = 'r';
 		}
-		else if (it->first == 'r'){
-			newCom->insert(make_pair('i', it->second));
+		else if (lCom[i]->type == 'r'){
+			lCom[i]->type = 'i';
 		}
 	}
 	
-	_fluxStack.push_back(newCom);
+	_fluxStack.push_back(lCom);
 	_commandStack.pop_back();
 }
 
@@ -206,22 +206,21 @@ void VoxelEditor::redo(){
 		printf("_fluxStack is empty\n");
 		return;
 	}
-	map<char, command> *lCom, *newCom;
-	map<char, command>::iterator it;
 
-	newCom = new map<char, command>;
+	vector <command *> lCom;
+	
 	lCom = _fluxStack[_fluxStack.size() - 1];
 	execute(lCom);
 
-	for (it = lCom->begin(); it != lCom->end(); it++){
-		if (it->first == 'i'){
-			newCom->insert(make_pair('r', it->second));
+	for (int i = 0; i < lCom.size(); i++){
+		if (lCom[i]->type == 'i'){
+			lCom[i]->type = 'r';
 		}
-		else if (it->first == 'r'){
-			newCom->insert(make_pair('i', it->second));
+		else if (lCom[i]->type == 'r'){
+			lCom[i]->type = 'i';
 		}
 	}
 
-	_commandStack.push_back(newCom);
+	_commandStack.push_back(lCom);
 	_fluxStack.pop_back();
 }
