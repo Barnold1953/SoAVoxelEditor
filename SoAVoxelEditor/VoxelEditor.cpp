@@ -2,6 +2,8 @@
 #include "Camera.h"
 #include "VoxelRenderer.h"
 #include "Voxel.h"
+#include <iostream>
+#include<string>
 
 //
 // VoxelEditor.cpp
@@ -19,7 +21,18 @@ VoxelEditor::~VoxelEditor()
 }
 
 void VoxelEditor::initialize() {
-    _voxelGrid = new VoxelGrid(10, 10, 10);
+    std::cout << "Please input a size for your model" << std::endl;
+    int width;
+    int height;
+    int length;
+    std::string input;
+    std::cin >> input;
+    width = std::stoi(input);
+    std::cin >> input;
+    height = std::stoi(input);
+    std::cin >> input;
+    length = std::stoi(input);
+    _voxelGrid = new VoxelGrid(width, height, length);
     _currentVoxel = new Voxel;
     _currentVoxel->type = 'b';
     _currentVoxel->selected = false;
@@ -36,7 +49,7 @@ void VoxelEditor::update() {
 }
 
 void VoxelEditor::addVoxel(int x, int y, int z) {
-	if (_voxelGrid->addVoxel(_currentVoxel, x, y, z) == 1){
+	if (_voxelGrid->addVoxel(*_currentVoxel, x, y, z)){
 		vector <command *> tempComList;
 		command *c = new command;
 		c->type = 'i';
@@ -170,7 +183,7 @@ void VoxelEditor::execute(vector <command *> lCom){
 			printf("executing remove\n");
 			break;
 		case 'r':
-			_voxelGrid->addVoxel(lCom[i]->v, lCom[i]->coord.x, lCom[i]->coord.y, lCom[i]->coord.z);
+			_voxelGrid->addVoxel(*lCom[i]->v, lCom[i]->coord.x, lCom[i]->coord.y, lCom[i]->coord.z);
 			printf("executing insert\n");
 			break;
 		}

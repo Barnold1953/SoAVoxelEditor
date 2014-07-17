@@ -5,40 +5,49 @@
 #include "Voxel.h"
 #include "VoxelRenderer.h"
 
+#include <iostream>
 
-VoxelGrid::VoxelGrid(int width, int height, int length){
-    _voxels.resize(height*width*length);
-    for (int i = 0; i < height*width*length; i++){
-        _voxels[i] = new Voxel;
-        _voxels[i]->type = '\0';
-        _voxels[i]->selected = 0;
+
+VoxelGrid::VoxelGrid(int width, int height, int length):
+_width(width),
+_height(height),
+_length(length),
+_layerSize(width * height),
+_size(width * height * length),
+_voxelCount(0)
+{
+    Voxel tmpVoxel;
+    for(int i = 0; i < 3; i++)
+        tmpVoxel.color[i] = 0;
+    tmpVoxel.color[3] = 255;
+    tmpVoxel.selected = false;
+    tmpVoxel.type = 0;
+    _voxels = new Voxel[_size];
+    for(int i = 0; i < _size; i++) {
+        _voxels[i] = Voxel();
     }
-    _height = height;
-    _width = width;
-    _length = length;
-    _layerSize = _width * _height;
-    _vTot = 0;
 }
 
 //i*layersize + j*width + k
 //Y, Z, X basically‏
 
-bool VoxelGrid::addVoxel(Voxel* newV, int x, int y, int z){
+bool VoxelGrid::addVoxel(const Voxel& newV, int x, int y, int z){
     Voxel *tempV = getVoxel(x, y, z);
     
-    if (tempV == NULL){
+    if (tempV == nullptr){
         return 0;
     }
 
-   
     if (tempV->type == '\0'){
-        _vTot++;
-        tempV->type = newV->type;
-        tempV->selected = newV->selected;
+        _voxelCount++;
+        tempV->type = newV.type;
+        for(int i = 0; i < 4; i++)
+            tempV->color[i] = newV.color[i];
+        tempV->selected = newV.selected;
         VoxelRenderer::addVoxel(x, y, z);
 		return 1;
     } else{
-        printf("Voxel space <%d,%d,%d> is occupied.\n", x, y, z);
+        std::printf("Voxel space <%d,%d,%d> is occupied.\n", x, y, z);
 		return 0;
     }
 }
@@ -49,12 +58,12 @@ bool VoxelGrid::removeVoxel(int x, int y, int z){
         return 0;
     }
     if (tempV->type == '\0'){
-        printf("Nothing to remove at <%d,%d,%d>.\n", x, y, z);
+        std::printf("Nothing to remove at <%d,%d,%d>.\n", x, y, z);
 		return 0;
     } else{
-        _vTot--;
-        tempV->type = '\0';
-        tempV->selected = 0;
+        _voxelCount--;
+        tempV->type = 0;
+        tempV->selected = false;
         
         VoxelRenderer::removeVoxel(x, y, z);
     }
@@ -62,23 +71,11 @@ bool VoxelGrid::removeVoxel(int x, int y, int z){
 }
 
 Voxel* VoxelGrid::getVoxel(int x, int y, int z){
-   
-    bool rangeCheck = false;
+    if (x < 0 || x >= _width) return nullptr;
+    if (y < 0 || y >= _height) return nullptr;
+    if (z < 0 || z >= _length) return nullptr;
 
-    if (x < 0 || x >= _width){
-        rangeCheck = true;
-    }
-    if (y < 0 || y >= _height){
-        rangeCheck = true;
-    }
-    if (z < 0 || z >= _length){
-        rangeCheck = true;
-    }
-    if (rangeCheck == true){
-        return NULL;
-    }
-
-    return _voxels[z*_layerSize + y*_width + x];
+    return &_voxels[z*_layerSize + y*_width + x];
 }
 
 void VoxelGrid::drawGrid(Camera *camera) {
@@ -115,17 +112,15 @@ void VoxelGrid::drawGrid(Camera *camera) {
 
         //Generate the cube's vertex data
 
-        GridVertex* verts;
         int i = 0;
        
-        sizeHolder = ((_width + 1) + (_length + 1)) * 2;
-        verts = new GridVertex[sizeHolder];
+        sizeHolder = ((_width + 1) + (_length + 1)) * 2 + 16;
+        std::vector<GridVertex> verts(sizeHolder);
         int alpha = 255;
 
         for (int j = 0; j < _width + 1; j++, i += 2){
             verts[i].position.x = _width - j;
             verts[i].position.y = 0;
-           
             verts[i].position.z = 0;
 
             verts[i + 1].position.x = _width - j;
@@ -163,11 +158,165 @@ void VoxelGrid::drawGrid(Camera *camera) {
             verts[i + 1].color[3] = alpha;
         }
 
+        verts[i].position.x = 0;
+        verts[i].position.y = 0;
+        verts[i].position.z = 0;
+
+        verts[i + 1].position.x = 0;
+        verts[i + 1].position.y = _height;
+        verts[i + 1].position.z = 0;
+
+        verts[i].color[0] = 255;
+        verts[i].color[1] = 0;
+        verts[i].color[2] = 0;
+        verts[i].color[3] = alpha;
+
+        verts[i + 1].color[0] = 255;
+        verts[i + 1].color[1] = 0;
+        verts[i + 1].color[2] = 0;
+        verts[i + 1].color[3] = alpha;
+
+        i += 2;
+
+        verts[i].position.x = _width;
+        verts[i].position.y = 0;
+        verts[i].position.z = 0;
+
+        verts[i + 1].position.x = _width;
+        verts[i + 1].position.y = _height;
+        verts[i + 1].position.z = 0;
+
+        verts[i].color[0] = 255;
+        verts[i].color[1] = 0;
+        verts[i].color[2] = 0;
+        verts[i].color[3] = alpha;
+
+        verts[i + 1].color[0] = 255;
+        verts[i + 1].color[1] = 0;
+        verts[i + 1].color[2] = 0;
+        verts[i + 1].color[3] = alpha;
+
+        i += 2;
+
+        verts[i].position.x = _width;
+        verts[i].position.y = 0;
+        verts[i].position.z = _length;
+
+        verts[i + 1].position.x = _width;
+        verts[i + 1].position.y = _height;
+        verts[i + 1].position.z = _length;
+
+        verts[i].color[0] = 255;
+        verts[i].color[1] = 0;
+        verts[i].color[2] = 0;
+        verts[i].color[3] = alpha;
+
+        verts[i + 1].color[0] = 255;
+        verts[i + 1].color[1] = 0;
+        verts[i + 1].color[2] = 0;
+        verts[i + 1].color[3] = alpha;
+
+        i += 2;
+        verts[i].position.x = 0;
+        verts[i].position.y = 0;
+        verts[i].position.z = _length;
+
+        verts[i + 1].position.x = 0;
+        verts[i + 1].position.y = _height;
+        verts[i + 1].position.z = _length;
+
+        verts[i].color[0] = 255;
+        verts[i].color[1] = 0;
+        verts[i].color[2] = 0;
+        verts[i].color[3] = alpha;
+
+        verts[i + 1].color[0] = 255;
+        verts[i + 1].color[1] = 0;
+        verts[i + 1].color[2] = 0;
+        verts[i + 1].color[3] = alpha;
+
+        i += 2;
+        verts[i].position.x = 0;
+        verts[i].position.y = _height;
+        verts[i].position.z = 0;
+
+        verts[i + 1].position.x = _width;
+        verts[i + 1].position.y = _height;
+        verts[i + 1].position.z = 0;
+
+        verts[i].color[0] = 255;
+        verts[i].color[1] = 0;
+        verts[i].color[2] = 0;
+        verts[i].color[3] = alpha;
+
+        verts[i + 1].color[0] = 255;
+        verts[i + 1].color[1] = 0;
+        verts[i + 1].color[2] = 0;
+        verts[i + 1].color[3] = alpha;
+
+        i += 2;
+        verts[i].position.x = _width;
+        verts[i].position.y = _height;
+        verts[i].position.z = 0;
+
+        verts[i + 1].position.x = _width;
+        verts[i + 1].position.y = _height;
+        verts[i + 1].position.z = _length;
+
+        verts[i].color[0] = 255;
+        verts[i].color[1] = 0;
+        verts[i].color[2] = 0;
+        verts[i].color[3] = alpha;
+
+        verts[i + 1].color[0] = 255;
+        verts[i + 1].color[1] = 0;
+        verts[i + 1].color[2] = 0;
+        verts[i + 1].color[3] = alpha;
+
+        i += 2;
+        verts[i].position.x = _width;
+        verts[i].position.y = _height;
+        verts[i].position.z = _length;
+
+        verts[i + 1].position.x = 0;
+        verts[i + 1].position.y = _height;
+        verts[i + 1].position.z = _length;
+
+        verts[i].color[0] = 255;
+        verts[i].color[1] = 0;
+        verts[i].color[2] = 0;
+        verts[i].color[3] = alpha;
+
+        verts[i + 1].color[0] = 255;
+        verts[i + 1].color[1] = 0;
+        verts[i + 1].color[2] = 0;
+        verts[i + 1].color[3] = alpha;
+
+        i += 2;
+        verts[i].position.x = 0;
+        verts[i].position.y = _height;
+        verts[i].position.z = _length;
+
+        verts[i + 1].position.x = 0;
+        verts[i + 1].position.y = _height;
+        verts[i + 1].position.z = 0;
+
+        verts[i].color[0] = 255;
+        verts[i].color[1] = 0;
+        verts[i].color[2] = 0;
+        verts[i].color[3] = alpha;
+
+        verts[i + 1].color[0] = 255;
+        verts[i + 1].color[1] = 0;
+        verts[i + 1].color[2] = 0;
+        verts[i + 1].color[3] = alpha;
+
+        i += 2;
         //bind the buffers into the correct slots
         glBindBuffer(GL_ARRAY_BUFFER, vboID);
         //this call is optional, but it makes it faster (not in this case) because it orphans any previous buffer. opengl-tutorial has details
         //fill the buffer with our vertex data. This is basically a memcpy. Static draw means we change the buffer once and draw many times
-        glBufferData(GL_ARRAY_BUFFER, sizeHolder * sizeof(GridVertex), verts, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeHolder * sizeof(GridVertex), verts.data(), GL_STATIC_DRAW);
     } else{ //we already initialized the buffers on another frame
         glBindBuffer(GL_ARRAY_BUFFER, vboID);
     }
@@ -187,7 +336,7 @@ void VoxelGrid::drawGrid(Camera *camera) {
 }
 
 void VoxelGrid::drawVoxels(Camera *camera) {
-    if (_vTot == 0){
+    if (_voxelCount == 0){
         return;
     }
 

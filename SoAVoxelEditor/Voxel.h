@@ -1,18 +1,18 @@
 #pragma once
-#include <GL/GL.h>
+#include <GL\glew.h>
 #include <string>
 
 using namespace std;
 
 //Describes a voxel, for flyweight programming pattern
-struct VoxelType
-{
+struct VoxelType {
+    unsigned short id; // This value should only be changed by the VoxelTypeRegistry
     string name;
 };
 
 //Grid voxel
-struct Voxel{
-    char type;
-    bool selected;
+struct Voxel {
+    unsigned short type;
 	GLubyte color[4];
+    bool selected;
 };
