@@ -44,23 +44,22 @@ bool VoxelGrid::addVoxel(const Voxel& newV, int x, int y, int z){
         for(int i = 0; i < 4; i++)
             tempV->color[i] = newV.color[i];
         tempV->selected = newV.selected;
-        VoxelRenderer::addVoxel(x, y, z);
+        VoxelRenderer::addVoxel(x, y, z, newV.color);
 		return 1;
     } else{
-        std::printf("Voxel space <%d,%d,%d> is occupied.\n", x, y, z);
+        //std::printf("Voxel space <%d,%d,%d> is occupied.\n", x, y, z);
 		return 0;
     }
 }
 
 bool VoxelGrid::removeVoxel(int x, int y, int z){
     Voxel *tempV = getVoxel(x, y, z);
-    if (tempV == NULL){
-        return 0;
-    }
-    if (tempV->type == '\0'){
-        std::printf("Nothing to remove at <%d,%d,%d>.\n", x, y, z);
-		return 0;
-    } else{
+    if (!tempV) return false;
+
+    if (tempV->type == 0){
+        //std::printf("Nothing to remove at <%d,%d,%d>.\n", x, y, z);
+		return false;
+    } else {
         _voxelCount--;
         tempV->type = 0;
         tempV->selected = false;

@@ -27,21 +27,25 @@ extern map <GLuint, SOAKEY> Keys;
 extern bool MouseButtons[10];
 
 //interleaved vertex data for a BlockShading
-struct BlockVertex{
+struct BlockVertex {
 	glm::vec3 position;
 	GLubyte color[4];
 	glm::vec3 normal;
-	glm::vec2 text;
-	float selected;
 };
 
-struct BlockMesh{
+struct BlockMesh {
 	BlockVertex verts[24];
 };
 
-struct GridVertex{
+struct GridVertex {
 	glm::vec3 position;
 	GLubyte color[4];
+};
+
+struct Mesh {
+    Mesh() {}
+    GLuint vboID;
+    GLuint iboID;
 };
 
 

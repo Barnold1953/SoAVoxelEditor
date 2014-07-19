@@ -198,20 +198,21 @@ void control()
 			}
 			break;
 		case SDL_MOUSEBUTTONDOWN:
-			MouseButtons[evnt.button.button] = 1;
-			if (MouseButtons[SDL_BUTTON_LEFT]){
+            if(evnt.button.button == SDL_BUTTON_LEFT) {
 				glm::vec3 temp = mainCamera->screenToWorld(glm::vec2(evnt.motion.x, evnt.motion.y), graphicsOptions.screenWidth, graphicsOptions.screenHeight);
 				voxelEditor.findIntersect(mainCamera->getPosition(), temp);
-			}
+            }
+            MouseButtons[evnt.button.button] = true;
 			break;
 		case SDL_MOUSEBUTTONUP:
-			MouseButtons[evnt.button.button] = 0;
+            std::cout << "Mouse button released!" << std::endl;
+			MouseButtons[evnt.button.button] = false;
 			break;
 		case SDL_MOUSEWHEEL:
 			mainCamera->mouseZoom(evnt.wheel.y);
 			break;
 		case SDL_KEYDOWN:
-			Keys[evnt.key.keysym.sym].pr = 1;
+			Keys[evnt.key.keysym.sym].pr = true;
 			switch (evnt.key.keysym.sym){
 			case SDLK_t:
                 voxelEditor.cycleState();
@@ -228,11 +229,17 @@ void control()
 					voxelEditor.redo();
 				}
 				break;
+            case SDLK_f:
+                voxelEditor.fillSelected();
+                break;
+            case SDLK_r:
+                voxelEditor.removeSelected();
+                break;
 			}
 			break;
 
 		case SDL_KEYUP:
-			Keys[evnt.key.keysym.sym].pr = 0;
+			Keys[evnt.key.keysym.sym].pr = false;
 			break;
 		}
 	}

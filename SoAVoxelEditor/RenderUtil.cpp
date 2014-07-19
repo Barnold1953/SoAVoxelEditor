@@ -89,3 +89,21 @@ void RenderUtil::drawLine(Camera *camera, glm::vec3 p1, glm::vec3 p2, GLubyte r,
 
     glLineWidth(1);
 }
+
+void RenderUtil::uploadMesh(GLuint* vboID, GLuint* iboID, const BlockVertex* blockVertices, const int numVertices, const GLuint* indices, const int numIndices) {
+    //generate a buffer object for the vboID. after this call, vboID will be a number > 0
+    glGenBuffers(1, vboID);
+    //generate buffer object for the indices
+    glGenBuffers(1, iboID);
+
+    //bind the buffers into the correct slots
+    glBindBuffer(GL_ARRAY_BUFFER, *vboID);
+
+    glBufferData(GL_ARRAY_BUFFER, numVertices * sizeof(BlockVertex), blockVertices, GL_STATIC_DRAW);
+
+    //now do the same thing for the elements
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *iboID);
+
+    //Don't need vTot, just use the ratio of indices to verts, which is 6/4
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, numIndices * sizeof(GLuint), indices, GL_STATIC_DRAW);
+}

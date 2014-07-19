@@ -26,20 +26,15 @@ void BlockShader::initialize(string dirPath)
 	glBindAttribLocation(shaderID, 0, "vertexPosition");
 	glBindAttribLocation(shaderID, 1, "vertexColor");
 	glBindAttribLocation(shaderID, 2, "vertexNormal");
-	glBindAttribLocation(shaderID, 3, "textCoordinate");
-	glBindAttribLocation(shaderID, 4, "textureType");
 	LinkShaders(shaderID, vID, fID);
 
 	mvpID = GetUniform(shaderID, "MVP");
 
 	lightPosID = GetUniform(shaderID, "lightPosition_worldspace");
 
-	textPosID = GetUniform(shaderID, "texture");
-	textSelPosID = GetUniform(shaderID, "selTexture");
-
 	//selected = GetUniform(shaderID, "selected");
 
-	initialized = 1;
+	initialized = true;
 }
 
 void BlockShader::bind()
@@ -54,8 +49,6 @@ void BlockShader::bind()
 	glEnableVertexAttribArray(0); //vertexPosition
 	glEnableVertexAttribArray(1); //vertexColor
 	glEnableVertexAttribArray(2); //vertexNormal
-	glEnableVertexAttribArray(3); //textureCoordinate
-	glEnableVertexAttribArray(4); //textureType
 }
 
 void BlockShader::unBind()
@@ -81,7 +74,7 @@ void GridShader::initialize(string dirPath)
 
 	mvpID = GetUniform(shaderID, "MVP");
 
-	initialized = 1;
+	initialized = true;
 }
 
 void GridShader::bind()
