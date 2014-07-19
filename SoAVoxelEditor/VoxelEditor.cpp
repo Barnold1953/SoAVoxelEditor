@@ -11,7 +11,7 @@
 // Copyright 2014 Seed Of Andromeda
 //
 
-VoxelEditor::VoxelEditor(): _voxelGrid(NULL), _currentVoxel(NULL), _state('i'), selectedFirstBlock(false), selectedSecondBlock(false)
+VoxelEditor::VoxelEditor(): _voxelGrid(NULL), _currentVoxel(NULL), _state('i'), _selectedFirstBlock(false), _selectedSecondBlock(false)
 {
 }
 
@@ -109,8 +109,8 @@ void VoxelEditor::fillRange(int x1, int y1, int z1, int x2, int y2, int z2) {
 }
 
 void VoxelEditor::fillSelected() {
-    if(selectedFirstBlock && selectedSecondBlock) {
-        fillRange(selectedX1, selectedY1, selectedZ1, selectedX2, selectedY2, selectedZ2);
+    if(_selectedFirstBlock && _selectedSecondBlock) {
+        fillRange(_selectedX1, _selectedY1, _selectedZ1, _selectedX2, _selectedY2, _selectedZ2);
     }
 }
 
@@ -142,8 +142,8 @@ void VoxelEditor::removeRange(int x1, int y1, int z1, int x2, int y2, int z2) {
 }
 
 void VoxelEditor::removeSelected() {
-    if(selectedFirstBlock && selectedSecondBlock) {
-        removeRange(selectedX1, selectedY1, selectedZ1, selectedX2, selectedY2, selectedZ2);
+    if(_selectedFirstBlock && _selectedSecondBlock) {
+        removeRange(_selectedX1, _selectedY1, _selectedZ1, _selectedX2, _selectedY2, _selectedZ2);
     }
 }
 
@@ -208,21 +208,21 @@ void VoxelEditor::findIntersect(const glm::vec3 &startPosition, const glm::vec3 
                     tempV = direction * (i - step) + startPosition;
                     tempVox = _voxelGrid->getVoxel(tempV.x, tempV.y, tempV.z);
                     if(tempVox != NULL) {
-                        if(!selectedFirstBlock) {
-                            selectedFirstBlock = true;
-                            selectedX1 = tempV.x;
-                            selectedY1 = tempV.y;
-                            selectedZ1 = tempV.z;
-                            std::cout << "X1: " << selectedX1 << " Y1: " << selectedY1 << " Z1: " << selectedZ1 << std::endl;
-                        } else if(!selectedSecondBlock) {
-                            selectedSecondBlock = true;
-                            selectedX2 = tempV.x;
-                            selectedY2 = tempV.y;
-                            selectedZ2 = tempV.z;
-                            std::cout << "X2: " << selectedX2 << " Y2: " << selectedY2 << " Z2: " << selectedZ2 << std::endl;
+                        if(!_selectedFirstBlock) {
+                            _selectedFirstBlock = true;
+                            _selectedX1 = tempV.x;
+                            _selectedY1 = tempV.y;
+                            _selectedZ1 = tempV.z;
+                            std::cout << "X1: " << _selectedX1 << " Y1: " << _selectedY1 << " Z1: " << _selectedZ1 << std::endl;
+                        } else if(!_selectedSecondBlock) {
+                            _selectedSecondBlock = true;
+                            _selectedX2 = tempV.x;
+                            _selectedY2 = tempV.y;
+                            _selectedZ2 = tempV.z;
+                            std::cout << "X2: " << _selectedX2 << " Y2: " << _selectedY2 << " Z2: " << _selectedZ2 << std::endl;
                         } else {
-                            selectedFirstBlock = false;
-                            selectedSecondBlock = false;
+                            _selectedFirstBlock = false;
+                            _selectedSecondBlock = false;
                             std::cout << "Removed selected volume" << std::endl;
                         }
                     }
@@ -233,21 +233,21 @@ void VoxelEditor::findIntersect(const glm::vec3 &startPosition, const glm::vec3 
                         tempV = direction * (i - step) + startPosition;
                         tempVox = _voxelGrid->getVoxel(tempV.x, tempV.y, tempV.z);
                         if(tempVox != NULL) {
-                            if(!selectedFirstBlock) {
-                                selectedFirstBlock = true;
-                                selectedX1 = tempV.x;
-                                selectedY1 = tempV.y;
-                                selectedZ1 = tempV.z;
-                                std::cout << "X1: " << selectedX1 << " Y1: " << selectedY1 << " Z1: " << selectedZ1 << std::endl;
-                            } else if(!selectedSecondBlock) {
-                                selectedSecondBlock = true;
-                                selectedX2 = tempV.x;
-                                selectedY2 = tempV.y;
-                                selectedZ2 = tempV.z;
-                                std::cout << "X2: " << selectedX2 << " Y2: " << selectedY2 << " Z2: " << selectedZ2 << std::endl;
+                            if(!_selectedFirstBlock) {
+                                _selectedFirstBlock = true;
+                                _selectedX1 = tempV.x;
+                                _selectedY1 = tempV.y;
+                                _selectedZ1 = tempV.z;
+                                std::cout << "X1: " << _selectedX1 << " Y1: " << _selectedY1 << " Z1: " << _selectedZ1 << std::endl;
+                            } else if(!_selectedSecondBlock) {
+                                _selectedSecondBlock = true;
+                                _selectedX2 = tempV.x;
+                                _selectedY2 = tempV.y;
+                                _selectedZ2 = tempV.z;
+                                std::cout << "X2: " << _selectedX2 << " Y2: " << _selectedY2 << " Z2: " << _selectedZ2 << std::endl;
                             } else {
-                                selectedFirstBlock = false;
-                                selectedSecondBlock = false;
+                                _selectedFirstBlock = false;
+                                _selectedSecondBlock = false;
                                 std::cout << "Removed selected volume" << std::endl;
                             }
                         }

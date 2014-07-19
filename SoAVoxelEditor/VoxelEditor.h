@@ -55,9 +55,9 @@ private:
 	int _width, _height;
     char _state;
     vector < vector <Command*> > _commandStack, _fluxStack;
-    bool selectedFirstBlock;
-    int selectedX1, selectedY1, selectedZ1;
-    bool selectedSecondBlock;
-    int selectedX2, selectedY2, selectedZ2;
+    bool _selectedFirstBlock;
+    int _selectedX1, _selectedY1, _selectedZ1;
+    bool _selectedSecondBlock;
+    int _selectedX2, _selectedY2, _selectedZ2;
 };
 
