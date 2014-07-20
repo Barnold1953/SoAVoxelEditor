@@ -4,6 +4,8 @@
 #include "GlobalStructs.h"
 #include "Errors.h"
 
+Mesh* RenderUtil::_mesh = nullptr;
+
 bool RenderUtil::checkGlError(){
     GLenum err = glGetError();
     if (err != GL_NO_ERROR){
@@ -106,4 +108,98 @@ void RenderUtil::uploadMesh(GLuint* vboID, GLuint* iboID, const BlockVertex* blo
 
     //Don't need vTot, just use the ratio of indices to verts, which is 6/4
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, numIndices * sizeof(GLuint), indices, GL_STATIC_DRAW);
+}
+
+void RenderUtil::uploadMesh(GLuint* vboID, GLuint* iboID, const glm::vec3* vertices, const int numVertices, const GLuint* indices, const int numIndices) {
+    //generate a buffer object for the vboID. after this call, vboID will be a number > 0
+    glGenBuffers(1, vboID);
+    //generate buffer object for the indices
+    glGenBuffers(1, iboID);
+
+    //bind the buffers into the correct slots
+    glBindBuffer(GL_ARRAY_BUFFER, *vboID);
+
+    glBufferData(GL_ARRAY_BUFFER, numVertices * sizeof(glm::vec3), vertices, GL_STATIC_DRAW);
+
+    //now do the same thing for the elements
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *iboID);
+
+    //Don't need vTot, just use the ratio of indices to verts, which is 6/4
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, numIndices * sizeof(GLuint), indices, GL_STATIC_DRAW);
+}
+
+void RenderUtil::initializeWireframeBox() {
+    _mesh = new Mesh;
+    const static int numVertices = 8;
+    const static int numIndices = 24;
+    const static glm::vec3 vertices[numVertices] = {
+        glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec3(1.0f, 0.0f, 0.0f),
+        glm::vec3(1.0f, 0.0f, 1.0f),
+        glm::vec3(0.0f, 0.0f, 1.0f),
+
+        glm::vec3(0.0f, 1.0f, 0.0f),
+        glm::vec3(1.0f, 1.0f, 0.0f),
+        glm::vec3(1.0f, 1.0f, 1.0f),
+        glm::vec3(0.0f, 1.0f, 1.0f),
+    };
+    const static GLuint indices[numIndices] = {
+        0, 1,
+        1, 2,
+        2, 3,
+        3, 0,
+        0, 4,
+        1, 5,
+        2, 6,
+        3, 7,
+        4, 5,
+        5, 6,
+        6, 7,
+        7, 4
+    };
+
+    uploadMesh(&_mesh->vboID, &_mesh->iboID, vertices, numVertices, indices, numIndices);
+    _mesh->numIndices = numIndices;
+}
+
+void RenderUtil::drawWireframeBox(class Camera* camera, const glm::vec3& position, const glm::vec3& size, const glm::vec4& color) {
+    if(!_mesh) initializeWireframeBox();
+
+    wireframeShader.bind();
+
+    glBindBuffer(GL_ARRAY_BUFFER, _mesh->vboID);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _mesh->iboID);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);
+
+    const glm::vec3 &cameraPosition = camera->getPosition();
+
+    glm::mat4 modelMatrix(1);
+    modelMatrix[3][0] = -cameraPosition.x + position.x;
+    modelMatrix[3][1] = -cameraPosition.y + position.y;
+    modelMatrix[3][2] = -cameraPosition.z + position.z;
+    modelMatrix[0][0] = size.x;
+    modelMatrix[1][1] = size.y;
+    modelMatrix[2][2] = size.z;
+    glm::mat4 MVP = camera->getProjectionMatrix() * camera->getViewMatrix() * modelMatrix;
+
+    glUniformMatrix4fv(blockShader.mvpID, 1, GL_FALSE, &MVP[0][0]);
+    glUniform4f(wireframeShader.colorID, color.r, color.g, color.b, color.a);
+
+    glLineWidth(2);
+
+    glDrawElements(GL_LINES, _mesh->numIndices, GL_UNSIGNED_INT, (void*)0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+    wireframeShader.unBind();
+}
+
+void RenderUtil::releaseWireframeBox() {
+    if(_mesh) {
+        glDeleteBuffers(1, &_mesh->vboID);
+        glDeleteBuffers(1, &_mesh->iboID);
+        delete _mesh;
+    }
 }

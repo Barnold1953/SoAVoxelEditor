@@ -2,8 +2,9 @@
 #include "Camera.h"
 #include "VoxelRenderer.h"
 #include "Voxel.h"
+#include "RenderUtil.h"
 #include <iostream>
-#include<string>
+#include <string>
 
 //
 // VoxelEditor.cpp
@@ -35,7 +36,6 @@ void VoxelEditor::initialize() {
     _voxelGrid = new VoxelGrid(width, height, length);
     _currentVoxel = new Voxel;
     _currentVoxel->type = 'b';
-    _currentVoxel->selected = false;
     _currentVoxel->color[0] = 0;
     _currentVoxel->color[1] = 255;
     _currentVoxel->color[2] = 255;
@@ -45,7 +45,22 @@ void VoxelEditor::initialize() {
 
 void VoxelEditor::draw(Camera *camera) {
     _voxelGrid->drawGrid(camera);
+
+    if(_selectedFirstBlock && _selectedSecondBlock) {
+        int startX = _selectedX1 < _selectedX2 ? _selectedX1 : _selectedX2;
+        int startY = _selectedY1 < _selectedY2 ? _selectedY1 : _selectedY2;
+        int startZ = _selectedZ1 < _selectedZ2 ? _selectedZ1 : _selectedZ2;
+
+        int endX = _selectedX2 <= _selectedX1 ? _selectedX1 : _selectedX2;
+        int endY = _selectedY2 <= _selectedY1 ? _selectedY1 : _selectedY2;
+        int endZ = _selectedZ2 <= _selectedZ1 ? _selectedZ1 : _selectedZ2;
+        RenderUtil::drawWireframeBox(camera, glm::vec3(startX, startY, startZ), glm::vec3(endX - startX + 1, endY - startY + 1, endZ - startZ + 1), glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+    } else if(_selectedFirstBlock) {
+        RenderUtil::drawWireframeBox(camera, glm::vec3(_selectedX1, _selectedY1, _selectedZ1), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+    }
+
     _voxelGrid->drawVoxels(camera);
+
 }
 
 void VoxelEditor::update() {
@@ -165,7 +180,7 @@ void VoxelEditor::findIntersect(const glm::vec3 &startPosition, const glm::vec3 
     glm::vec3 base = direction, tempV;
     Voxel *tempVox;
 
-    drawDebugLine = 1;
+    drawDebugLine = false;
     debugP1 = startPosition;
 
     const float step = 0.1f;
@@ -178,32 +193,6 @@ void VoxelEditor::findIntersect(const glm::vec3 &startPosition, const glm::vec3 
 
             switch (_state) {
             case 's':
-                /*
-                if(tempV.z < 0) {
-                    i = maxStep; //force it to stop
-                    break;
-                }
-                if(tempVox != NULL) {
-                    if(!selectedFirstBlock) {
-                        selectedFirstBlock = true;
-                        selectedX1 = tempV.x;
-                        selectedY1 = tempV.y;
-                        selectedZ1 = tempV.z;
-                        std::cout << "X1: " << selectedX1 << " Y1: " << selectedY1 << " Z1: " << selectedZ1 << std::endl;
-                    } else if(!selectedSecondBlock) {
-                        selectedSecondBlock = true;
-                        selectedX2 = tempV.x;
-                        selectedY2 = tempV.y;
-                        selectedZ2 = tempV.z;
-                        std::cout << "X2: " << selectedX2 << " Y2: " << selectedY2 << " Z2: " << selectedZ2 << std::endl;
-                    } else {
-                        selectedFirstBlock = false;
-                        selectedSecondBlock = false;
-                        std::cout << "Removed selected volume" << std::endl;
-                    }
-                    i = maxStep;
-                }
-                */
                 if(tempV.y < 0) {
                     tempV = direction * (i - step) + startPosition;
                     tempVox = _voxelGrid->getVoxel(tempV.x, tempV.y, tempV.z);
@@ -374,4 +363,10 @@ void VoxelEditor::redo(){
 
 	_commandStack.push_back(lCom);
 	_fluxStack.pop_back();
+}
+
+void VoxelEditor::setCurrentVoxel(const Voxel& voxel) {
+    for(int i = 0; i < 4; i++)
+        _currentVoxel->color[i] = voxel.color[i];
+    _currentVoxel->type = voxel.type;
 }

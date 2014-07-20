@@ -11,6 +11,7 @@
 
 BlockShader blockShader;
 GridShader gridShader;
+WireframeShader wireframeShader;
 
 GLuint LoadShaders(const char * vertex_file_path, const char * fragment_file_path, GLuint &VertexShaderID, GLuint &FragmentShaderID);
 void LinkShaders(GLuint ProgramID, GLuint VertexShaderID, GLuint FragmentShaderID);
@@ -97,7 +98,38 @@ void GridShader::unBind()
 	glDisableVertexAttribArray(1); //vertexColor
 }
 
-GLuint LoadShaders(const char * vertex_file_path, const char * fragment_file_path, GLuint &VertexShaderID, GLuint &FragmentShaderID){
+void WireframeShader::initialize(string dirPath) {
+    if(initialized) return;
+    cout << "Loading wireframeShader\n";
+
+    GLuint vID, fID;
+    shaderID = LoadShaders((dirPath + "Wireframe.vert").c_str(), (dirPath + "Wireframe.frag").c_str(), vID, fID);
+    glBindAttribLocation(shaderID, 0, "vertexPosition");
+    LinkShaders(shaderID, vID, fID);
+
+    mvpID = GetUniform(shaderID, "MVP");
+    colorID = GetUniform(shaderID, "meshColor");
+
+    initialized = true;
+}
+
+void WireframeShader::bind() {
+    if(!initialized) {
+        error("SHADER BOUND BEFORE INITIALIZATION");
+        int a;
+        cin >> a;
+    }
+    glUseProgram(shaderID);
+    //need to enable all the vertex attributes.
+    glEnableVertexAttribArray(0); //vertexPosition
+}
+
+void WireframeShader::unBind() {
+    //need to disable all the vertex attributes. Otherwise, bugs occur when drawing other things on some graphics cards
+    glDisableVertexAttribArray(0); //vertexPosition
+}
+
+GLuint LoadShaders(const char* vertex_file_path, const char* fragment_file_path, GLuint &VertexShaderID, GLuint &FragmentShaderID){
 	int a;
 	// Create the shaders
 	VertexShaderID = glCreateShader(GL_VERTEX_SHADER);

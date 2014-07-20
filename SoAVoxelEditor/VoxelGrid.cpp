@@ -20,7 +20,6 @@ _voxelCount(0)
     for(int i = 0; i < 3; i++)
         tmpVoxel.color[i] = 0;
     tmpVoxel.color[3] = 255;
-    tmpVoxel.selected = false;
     tmpVoxel.type = 0;
     _voxels = new Voxel[_size];
     for(int i = 0; i < _size; i++) {
@@ -43,7 +42,6 @@ bool VoxelGrid::addVoxel(const Voxel& newV, int x, int y, int z){
         tempV->type = newV.type;
         for(int i = 0; i < 4; i++)
             tempV->color[i] = newV.color[i];
-        tempV->selected = newV.selected;
         VoxelRenderer::addVoxel(x, y, z, newV.color);
 		return 1;
     } else{
@@ -62,7 +60,6 @@ bool VoxelGrid::removeVoxel(int x, int y, int z){
     } else {
         _voxelCount--;
         tempV->type = 0;
-        tempV->selected = false;
         
         VoxelRenderer::removeVoxel(x, y, z);
     }

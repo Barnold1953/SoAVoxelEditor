@@ -22,6 +22,10 @@
 #include "RenderUtil.h"
 #include "VoxelEditor.h"
 #include "TextureManager.h"
+#include "Voxel.h"
+
+#include <stdlib.h>
+#include <time.h> 
 
 void initialize();
 void initializeSdlOpengl();
@@ -45,6 +49,7 @@ VoxelEditor voxelEditor;
 
 int main(int argc, char **argv)
 {
+    srand(time(NULL));
 	initialize();
 
 	while (gameState == PLAY){
@@ -58,6 +63,8 @@ int main(int argc, char **argv)
 		
 		//TODO: FPS limiter
 	}
+
+    RenderUtil::releaseWireframeBox();
 
 	//save options in case they changed.
 	saveOptions("Data/options.ini");
@@ -81,7 +88,7 @@ void initialize()
 	
     TextureManager::loadTextures();
 
-    drawDebugLine = 0;
+    drawDebugLine = false;
 
 	mainCamera = new Camera();
 
@@ -174,21 +181,18 @@ void initializeSdlOpengl()
 }
 
 
-void initializeShaders()
-{
+void initializeShaders() {
 	blockShader.initialize("Shaders/");
 	gridShader.initialize("Shaders/");
+    wireframeShader.initialize("Shaders/");
 }
 
 
 //get the SDL user input
-void control()
-{
+void control() {
 	SDL_Event evnt;
-	while (SDL_PollEvent(&evnt))
-	{
-		switch (evnt.type)
-		{
+	while (SDL_PollEvent(&evnt)) {
+		switch (evnt.type) {
 		case SDL_QUIT:
 			gameState = EXIT;
 			return;
@@ -235,7 +239,15 @@ void control()
             case SDLK_r:
                 voxelEditor.removeSelected();
                 break;
-			}
+            case SDLK_p:
+                Voxel v;
+                for(int i = 0; i < 3; i++)
+                    v.color[i] = rand() % 256;
+                v.color[3] = 255;
+                v.type = 'b';
+                voxelEditor.setCurrentVoxel(v);
+                break;
+            }
 			break;
 
 		case SDL_KEYUP:
@@ -245,15 +257,13 @@ void control()
 	}
 }
 
-void update()
-{
+void update() {
     voxelEditor.update();
 	mainCamera->update();
 }
 
 //draws the scene
-void draw()
-{
+void draw() {
 	glClearDepth(1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -262,9 +272,7 @@ void draw()
     SDL_GL_SwapWindow(mainWindow);
 }
 
-//hulk smash!
-void destroy()
-{
+void destroy() {
 	//this stuff is technically optional, since it should happen on app exit anyways
 	SDL_GL_DeleteContext(mainOpenGLContext);
 	SDL_DestroyWindow(mainWindow);

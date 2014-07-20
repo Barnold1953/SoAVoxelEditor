@@ -46,6 +46,7 @@ struct Mesh {
     Mesh() {}
     GLuint vboID;
     GLuint iboID;
+    int numIndices;
 };
 
 

@@ -49,6 +49,9 @@ public:
 
     void findIntersect(const glm::vec3 &startPosition, const glm::vec3 &direction);
 
+    void setCurrentVoxel(const Voxel& voxel);
+    Voxel* getCurrentVoxel() { return _currentVoxel; }
+
 private:
 	VoxelGrid *_voxelGrid;
     Voxel *_currentVoxel;
