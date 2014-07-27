@@ -22,6 +22,10 @@
 #include "RenderUtil.h"
 #include "VoxelEditor.h"
 #include "TextureManager.h"
+#include "Voxel.h"
+
+#include <stdlib.h>
+#include <time.h> 
 
 void initialize();
 void initializeSdlOpengl();
@@ -45,6 +49,7 @@ VoxelEditor voxelEditor;
 
 int main(int argc, char **argv)
 {
+    srand(time(NULL));
 	initialize();
 
 	while (gameState == PLAY){
@@ -58,6 +63,8 @@ int main(int argc, char **argv)
 		
 		//TODO: FPS limiter
 	}
+
+    RenderUtil::releaseWireframeBox();
 
 	//save options in case they changed.
 	saveOptions("Data/options.ini");
@@ -81,7 +88,7 @@ void initialize()
 	
     TextureManager::loadTextures();
 
-    drawDebugLine = 0;
+    drawDebugLine = false;
 
 	mainCamera = new Camera();
 
@@ -174,21 +181,18 @@ void initializeSdlOpengl()
 }
 
 
-void initializeShaders()
-{
+void initializeShaders() {
 	blockShader.initialize("Shaders/");
 	gridShader.initialize("Shaders/");
+    wireframeShader.initialize("Shaders/");
 }
 
 
 //get the SDL user input
-void control()
-{
+void control() {
 	SDL_Event evnt;
-	while (SDL_PollEvent(&evnt))
-	{
-		switch (evnt.type)
-		{
+	while (SDL_PollEvent(&evnt)) {
+		switch (evnt.type) {
 		case SDL_QUIT:
 			gameState = EXIT;
 			return;
@@ -198,20 +202,21 @@ void control()
 			}
 			break;
 		case SDL_MOUSEBUTTONDOWN:
-			MouseButtons[evnt.button.button] = 1;
-			if (MouseButtons[SDL_BUTTON_LEFT]){
+            if(evnt.button.button == SDL_BUTTON_LEFT) {
 				glm::vec3 temp = mainCamera->screenToWorld(glm::vec2(evnt.motion.x, evnt.motion.y), graphicsOptions.screenWidth, graphicsOptions.screenHeight);
 				voxelEditor.findIntersect(mainCamera->getPosition(), temp);
-			}
+            }
+            MouseButtons[evnt.button.button] = true;
 			break;
 		case SDL_MOUSEBUTTONUP:
-			MouseButtons[evnt.button.button] = 0;
+            std::cout << "Mouse button released!" << std::endl;
+			MouseButtons[evnt.button.button] = false;
 			break;
 		case SDL_MOUSEWHEEL:
 			mainCamera->mouseZoom(evnt.wheel.y);
 			break;
 		case SDL_KEYDOWN:
-			Keys[evnt.key.keysym.sym].pr = 1;
+			Keys[evnt.key.keysym.sym].pr = true;
 			switch (evnt.key.keysym.sym){
 			case SDLK_t:
                 voxelEditor.cycleState();
@@ -228,25 +233,37 @@ void control()
 					voxelEditor.redo();
 				}
 				break;
-			}
+            case SDLK_f:
+                voxelEditor.fillSelected();
+                break;
+            case SDLK_r:
+                voxelEditor.removeSelected();
+                break;
+            case SDLK_p:
+                Voxel v;
+                for(int i = 0; i < 3; i++)
+                    v.color[i] = rand() % 256;
+                v.color[3] = 255;
+                v.type = 'b';
+                voxelEditor.setCurrentVoxel(v);
+                break;
+            }
 			break;
 
 		case SDL_KEYUP:
-			Keys[evnt.key.keysym.sym].pr = 0;
+			Keys[evnt.key.keysym.sym].pr = false;
 			break;
 		}
 	}
 }
 
-void update()
-{
+void update() {
     voxelEditor.update();
 	mainCamera->update();
 }
 
 //draws the scene
-void draw()
-{
+void draw() {
 	glClearDepth(1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -255,9 +272,7 @@ void draw()
     SDL_GL_SwapWindow(mainWindow);
 }
 
-//hulk smash!
-void destroy()
-{
+void destroy() {
 	//this stuff is technically optional, since it should happen on app exit anyways
 	SDL_GL_DeleteContext(mainOpenGLContext);
 	SDL_DestroyWindow(mainWindow);

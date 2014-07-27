@@ -88,7 +88,7 @@ void Camera::mouseMove(int relx, int rely)
 }
 
 void Camera::mouseZoom(float zoomScale){
-	zoomScale *= 0.04f;
+	zoomScale *= 0.7f;
 	_position += _direction * zoomScale;
 }
 

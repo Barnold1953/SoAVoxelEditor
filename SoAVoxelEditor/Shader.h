@@ -27,8 +27,6 @@ public:
 
 	GLuint mvpID;
 	GLuint lightPosID;
-	GLuint textPosID;
-	GLuint textSelPosID;
 protected:
 	bool initialized;
 };
@@ -50,5 +48,15 @@ public:
 	void unBind();
 };
 
+class WireframeShader: public Shader {
+public:
+    void initialize(string dirPath);
+    void bind();
+    void unBind();
+
+    GLuint colorID;
+};
+
 extern BlockShader blockShader;
 extern GridShader gridShader;
+extern WireframeShader wireframeShader;

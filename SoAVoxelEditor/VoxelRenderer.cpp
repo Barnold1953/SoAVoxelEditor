@@ -11,6 +11,7 @@ bool VoxelRenderer::_changed;
 vector <BlockVertex> VoxelRenderer::_currentVerts;
 GLuint *VoxelRenderer::_currentIndices;
 BlockMesh VoxelRenderer::_baseMesh;
+Mesh VoxelRenderer::_mesh;
 
 void VoxelRenderer::initialize(int w, int h, int l) {
     _changed = true;
@@ -44,28 +45,19 @@ void VoxelRenderer::initialize(int w, int h, int l) {
         _baseMesh.verts[i].color[1] = 0;
         _baseMesh.verts[i].color[2] = 0;
         _baseMesh.verts[i].color[3] = 255;
-
-        _baseMesh.verts[i].text.x = cubeTextCoords[i * 2];
-        _baseMesh.verts[i].text.y = cubeTextCoords[i * 2 + 1];
-
-        _baseMesh.verts[i].selected = 0.0;
     }
 
+    _mesh = Mesh();
+    _mesh.iboID = 0;
+    _mesh.vboID = 0;
 }
 
 void VoxelRenderer::drawVoxels(Camera *camera) {
-
-    //Opengl Resource for Opengl 3.3+ http://www.opengl-tutorial.org/
-
-    //*************** here is some example draw code. This is temporary, and should not really be used. ****************
     blockShader.bind();
 
     const glm::vec3 &position = camera->getPosition();
 
     glm::mat4 modelMatrix(1);
-    //this is a fast way to set up the translation. This is equivalent to a translatef
-    //We translate by the negative position of the camera. This causes the world to move around the camera, rather 
-    //than the camera to move around the world.
     modelMatrix[3][0] = -position.x;
     modelMatrix[3][1] = -position.y;
     modelMatrix[3][2] = -position.z;
@@ -79,52 +71,21 @@ void VoxelRenderer::drawVoxels(Camera *camera) {
     lightPos = glm::normalize(lightPos);
     glUniform3f(blockShader.lightPosID, lightPos.x, lightPos.y, lightPos.z);
 
-
-    //this shouldn't still work!!!!
-    glBindTexture(GL_TEXTURE_2D, TextureManager::getCubeTexture('b')->data);
-    RenderUtil::checkGlError();
-    glUniform1i(blockShader.textPosID, 0);
-    glBindTexture(GL_TEXTURE_2D, TextureManager::getSelectedTexture('b')->data);
-    RenderUtil::checkGlError();
-    glUniform1i(blockShader.textSelPosID, 1);
-
-    //Static variables, so they are intitialized onces and remain for the life of the program.
-    //In reality, your meshes should be stored in a class somewhere, but this is just an example
-    static GLuint vboID = 0;
-    static GLuint elementsID = 0;
-
     const int numIndices = (6 * _currentVerts.size()) / 4;
 
     //initialize the buffer, only happens once
-    if (_changed == true){
-        //generate a buffer object for the vboID. after this call, vboID will be a number > 0
-        glGenBuffers(1, &vboID);
-        //generate buffer object for the indices
-        glGenBuffers(1, &elementsID);
-
-        //bind the buffers into the correct slots
-        glBindBuffer(GL_ARRAY_BUFFER, vboID);
-
-        glBufferData(GL_ARRAY_BUFFER, _currentVerts.size() * sizeof(BlockVertex), &_currentVerts[0], GL_STATIC_DRAW);
-
-        //now do the same thing for the elements
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementsID);
-
-        //Don't need vTot, just use the ratio of indices to verts, which is 6/4
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, numIndices * sizeof(GLuint), _currentIndices, GL_STATIC_DRAW);
-
+    if (_changed){
+        RenderUtil::uploadMesh(&_mesh.vboID, &_mesh.iboID, &_currentVerts[0], _currentVerts.size(), _currentIndices, numIndices);
         _changed = false;
-    } else{ //we already initialized the buffers on another frame
-        glBindBuffer(GL_ARRAY_BUFFER, vboID);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementsID);
+    } else {
+        glBindBuffer(GL_ARRAY_BUFFER, _mesh.vboID);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _mesh.iboID);
     }
 
     //set our attribute pointers using our interleaved vertex data. Last parameter is offset into the vertex
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(BlockVertex), (void *)0); //vertexPosition
     glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(BlockVertex), (void *)12); //vertexColor
     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(BlockVertex), (void *)16); //vertexNormal
-    glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(BlockVertex), (void *)28); //textureCoordinates
-    glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(BlockVertex), (void *)36); //textureType
 
     //Finally, draw our data. The last parameter is the offset into the bound buffer
     glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, NULL);
@@ -136,7 +97,7 @@ void VoxelRenderer::drawVoxels(Camera *camera) {
     }
 }
 
-void VoxelRenderer::addVoxel(int x, int y, int z) {
+void VoxelRenderer::addVoxel(int x, int y, int z, const GLubyte* color) {
     BlockVertex tv;
 
     for (int i = 0; i < 24; i++){
@@ -144,7 +105,9 @@ void VoxelRenderer::addVoxel(int x, int y, int z) {
         tv.position.x += x;
         tv.position.y += y;
         tv.position.z += z;
-        tv.selected = 0.0;
+        for(int i = 0; i < 4; i++)
+            tv.color[i] = color[i];
+
         _currentVerts.push_back(tv);
     }
     _changed = true;
@@ -169,7 +132,7 @@ void VoxelRenderer::removeVoxel(int x, int y, int z) {
 void VoxelRenderer::selectVoxel(int x, int y, int z, bool selected) {
     for (int i = 0; i < _currentVerts.size(); i++){
         if ((int)_currentVerts[i].position.x - _baseMesh.verts[i % 24].position.x == x && (int)_currentVerts[i].position.y - _baseMesh.verts[i % 24].position.y == y && (int)_currentVerts[i].position.z - _baseMesh.verts[i % 24].position.z == z){
-            _currentVerts[i].selected = selected;
+            //_currentVerts[i].selected = selected;
             break;
         }
     }
