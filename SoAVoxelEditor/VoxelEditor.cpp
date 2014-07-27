@@ -74,7 +74,21 @@ void VoxelEditor::addVoxel(int x, int y, int z) {
 		c->coord.x = x;
 		c->coord.y = y;
 		c->coord.z = z;
-		c->v = _currentVoxel;
+
+		GLubyte color[4];
+		char type;
+		color[0] = _currentVoxel->color[0];
+		color[1] = _currentVoxel->color[1];
+		color[2] = _currentVoxel->color[2];
+		color[3] = _currentVoxel->color[3];
+		type = _currentVoxel->type;
+		c->v = new Voxel;
+		c->v->color[0] = color[0];
+		c->v->color[1] = color[1];
+		c->v->color[2] = color[2];
+		c->v->color[3] = color[3];
+		c->v->type = type;
+
 		tempComList.push_back(c);
 		newCommand(tempComList);
 	}
@@ -87,8 +101,22 @@ void VoxelEditor::removeVoxel(int x, int y, int z) {
 		c->type = 'r';
 		c->coord.x = x;
 		c->coord.y = y;
-		c->coord.z = z;
-		c->v = _currentVoxel;
+		c->coord.z = z;		
+		
+		GLubyte color[4];
+		char type;
+		color[0] = _currentVoxel->color[0];
+		color[1] = _currentVoxel->color[1];
+		color[2] = _currentVoxel->color[2];
+		color[3] = _currentVoxel->color[3];
+		type = _currentVoxel->type;
+		c->v = new Voxel;
+		c->v->color[0] = color[0];
+		c->v->color[1] = color[1];
+		c->v->color[2] = color[2];
+		c->v->color[3] = color[3];
+		c->v->type = type;
+
 		tempComList.push_back(c);
 		newCommand(tempComList);
 	}
@@ -307,11 +335,9 @@ void VoxelEditor::execute(vector <Command*> lCom) {
 		{
 		case 'i':
 			_voxelGrid->removeVoxel(lCom[i]->coord.x, lCom[i]->coord.y, lCom[i]->coord.z);
-			//printf("executing remove\n");
 			break;
 		case 'r':
 			_voxelGrid->addVoxel(*lCom[i]->v, lCom[i]->coord.x, lCom[i]->coord.y, lCom[i]->coord.z);
-			//printf("executing insert\n");
 			break;
 		}
 	}
