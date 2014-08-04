@@ -196,6 +196,7 @@ void RenderUtil::drawWireframeBox(class Camera* camera, const glm::vec3& positio
     wireframeShader.unBind();
 }
 
+
 void RenderUtil::releaseWireframeBox() {
     if(_mesh) {
         glDeleteBuffers(1, &_mesh->vboID);

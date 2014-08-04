@@ -26,7 +26,7 @@ void VoxelEditor::initialize() {
     int width;
     int height;
     int length;
-    std::string input;
+	std::string input;
     std::cin >> input;
     width = std::stoi(input);
     std::cin >> input;
@@ -34,6 +34,7 @@ void VoxelEditor::initialize() {
     std::cin >> input;
     length = std::stoi(input);
     _voxelGrid = new VoxelGrid(width, height, length);
+	//_voxelGrid = new VoxelGrid(10, 10, 10);
     _currentVoxel = new Voxel;
     _currentVoxel->type = 'b';
     _currentVoxel->color[0] = 0;
@@ -58,6 +59,10 @@ void VoxelEditor::draw(Camera *camera) {
     } else if(_selectedFirstBlock) {
         RenderUtil::drawWireframeBox(camera, glm::vec3(_selectedX1, _selectedY1, _selectedZ1), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
     }
+
+	if (_state == 'i'){
+		
+	}
 
     _voxelGrid->drawVoxels(camera);
 
@@ -203,117 +208,136 @@ void VoxelEditor::cycleState() {
     }
 }
 
+bool VoxelEditor::removeCheck(glm::vec3 location, glm::vec3 direction){
+	if (location.x < 0 && direction.x < 0)
+		return 1;
+	if (location.y < 0 && direction.y < 0)
+		return 1;
+	if (location.z < 0 && direction.z < 0)
+		return 1;
+	return 0;
+}
+
+void VoxelEditor::handleClick(){
+	glm::vec3 tempV = _currentIntersect;
+	Voxel *tempVox = _voxelGrid->getVoxel(tempV.x, tempV.y, tempV.z);
+
+	printf("Intersect at <%f,%f,%f>\n", (float)tempV.x, (float)tempV.y, (float)tempV.z);
+
+	switch (_state) {
+	case 's':
+		if (_currentIntersect.y < 0) {
+			tempV -= (_clickDirection * _step);
+			tempVox = _voxelGrid->getVoxel(tempV.x, tempV.y, tempV.z);
+			if (tempVox != NULL) {
+				if (!_selectedFirstBlock) {
+					_selectedFirstBlock = true;
+					_selectedX1 = tempV.x;
+					_selectedY1 = tempV.y;
+					_selectedZ1 = tempV.z;
+					std::cout << "X1: " << _selectedX1 << " Y1: " << _selectedY1 << " Z1: " << _selectedZ1 << std::endl;
+				}
+				else if (!_selectedSecondBlock) {
+					_selectedSecondBlock = true;
+					_selectedX2 = tempV.x;
+					_selectedY2 = tempV.y;
+					_selectedZ2 = tempV.z;
+					std::cout << "X2: " << _selectedX2 << " Y2: " << _selectedY2 << " Z2: " << _selectedZ2 << std::endl;
+				}
+				else {
+					_selectedFirstBlock = false;
+					_selectedSecondBlock = false;
+					std::cout << "Removed selected volume" << std::endl;
+				}
+			}
+		}
+		else if (tempVox != NULL) {
+			if (tempVox->type != '\0') {
+				//tempV = _clickDirection * (i - _step) + _clickStart;
+				tempVox = _voxelGrid->getVoxel(tempV.x, tempV.y, tempV.z);
+				if (tempVox != NULL) {
+					if (!_selectedFirstBlock) {
+						_selectedFirstBlock = true;
+						_selectedX1 = tempV.x;
+						_selectedY1 = tempV.y;
+						_selectedZ1 = tempV.z;
+						std::cout << "X1: " << _selectedX1 << " Y1: " << _selectedY1 << " Z1: " << _selectedZ1 << std::endl;
+					}
+					else if (!_selectedSecondBlock) {
+						_selectedSecondBlock = true;
+						_selectedX2 = tempV.x;
+						_selectedY2 = tempV.y;
+						_selectedZ2 = tempV.z;
+						std::cout << "X2: " << _selectedX2 << " Y2: " << _selectedY2 << " Z2: " << _selectedZ2 << std::endl;
+					}
+					else {
+						_selectedFirstBlock = false;
+						_selectedSecondBlock = false;
+						std::cout << "Removed selected volume" << std::endl;
+					}
+				}
+			}
+		}
+		break;
+	case 'i':
+		if (tempV.y < 0){
+			tempV -= (_clickDirection * _step);
+			tempVox = _voxelGrid->getVoxel(tempV.x, tempV.y, tempV.z);
+			if (tempVox != NULL){
+				addVoxel(tempV.x, tempV.y, tempV.z);
+			}
+		}
+		else if (tempVox != NULL){
+			if (tempVox->type != '\0'){
+				tempV -= (_clickDirection * _step); 
+				tempVox = _voxelGrid->getVoxel(tempV.x, tempV.y, tempV.z);
+				if (tempVox != NULL){
+					if (tempVox->type == '\0'){
+						glm::vec3 apos = tempV;
+					}
+					addVoxel(tempV.x, tempV.y, tempV.z);
+				}
+			}
+		}
+		break;
+	case 'r':
+		if (tempVox != NULL){
+			if (tempVox->type != '\0'){
+				removeVoxel(tempV.x, tempV.y, tempV.z);
+			}
+		}
+		break;
+	}
+}
+
 void VoxelEditor::findIntersect(const glm::vec3 &startPosition, const glm::vec3 &direction) {
-    float i = 0.1f;
+	float i = 0.1f;
     glm::vec3 base = direction, tempV;
     Voxel *tempVox;
+
+	_clickStart = startPosition;
+	_clickDirection = direction;
 
     drawDebugLine = false;
     debugP1 = startPosition;
 
-    const float step = 0.1f;
-    const float maxStep = 50.0f;
-
-    while (i < maxStep){
-        tempV = direction * i + startPosition;
-        if (tempV.x >= 0 && tempV.z >= 0){
-            tempVox = _voxelGrid->getVoxel(tempV.x, tempV.y, tempV.z);
-
-            switch (_state) {
-            case 's':
-                if(tempV.y < 0) {
-                    tempV = direction * (i - step) + startPosition;
-                    tempVox = _voxelGrid->getVoxel(tempV.x, tempV.y, tempV.z);
-                    if(tempVox != NULL) {
-                        if(!_selectedFirstBlock) {
-                            _selectedFirstBlock = true;
-                            _selectedX1 = tempV.x;
-                            _selectedY1 = tempV.y;
-                            _selectedZ1 = tempV.z;
-                            std::cout << "X1: " << _selectedX1 << " Y1: " << _selectedY1 << " Z1: " << _selectedZ1 << std::endl;
-                        } else if(!_selectedSecondBlock) {
-                            _selectedSecondBlock = true;
-                            _selectedX2 = tempV.x;
-                            _selectedY2 = tempV.y;
-                            _selectedZ2 = tempV.z;
-                            std::cout << "X2: " << _selectedX2 << " Y2: " << _selectedY2 << " Z2: " << _selectedZ2 << std::endl;
-                        } else {
-                            _selectedFirstBlock = false;
-                            _selectedSecondBlock = false;
-                            std::cout << "Removed selected volume" << std::endl;
-                        }
-                    }
-                    i = maxStep; //force it to stop
-                    break;
-                } else if(tempVox != NULL) {
-                    if(tempVox->type != '\0') {
-                        tempV = direction * (i - step) + startPosition;
-                        tempVox = _voxelGrid->getVoxel(tempV.x, tempV.y, tempV.z);
-                        if(tempVox != NULL) {
-                            if(!_selectedFirstBlock) {
-                                _selectedFirstBlock = true;
-                                _selectedX1 = tempV.x;
-                                _selectedY1 = tempV.y;
-                                _selectedZ1 = tempV.z;
-                                std::cout << "X1: " << _selectedX1 << " Y1: " << _selectedY1 << " Z1: " << _selectedZ1 << std::endl;
-                            } else if(!_selectedSecondBlock) {
-                                _selectedSecondBlock = true;
-                                _selectedX2 = tempV.x;
-                                _selectedY2 = tempV.y;
-                                _selectedZ2 = tempV.z;
-                                std::cout << "X2: " << _selectedX2 << " Y2: " << _selectedY2 << " Z2: " << _selectedZ2 << std::endl;
-                            } else {
-                                _selectedFirstBlock = false;
-                                _selectedSecondBlock = false;
-                                std::cout << "Removed selected volume" << std::endl;
-                            }
-                        }
-                        i = maxStep; //force it to stop
-                        break;
-                    }
-                }
-                break;
-            case 'i':
-                if (tempV.y < 0){
-                    tempV = direction * (i - step) + startPosition;
-                    tempVox = _voxelGrid->getVoxel(tempV.x, tempV.y, tempV.z);
-                    if (tempVox != NULL){
-                        addVoxel(tempV.x, tempV.y, tempV.z);
-                    }
-                    i = maxStep; //force it to stop
-                    break;
-                } else if (tempVox != NULL){
-                    if (tempVox->type != '\0'){
-                        tempV = direction * (i - step) + startPosition;
-                        tempVox = _voxelGrid->getVoxel(tempV.x, tempV.y, tempV.z);
-                        if (tempVox != NULL){
-                            if (tempVox->type == '\0'){
-                                glm::vec3 apos = tempV;
-                            }
-                            addVoxel(tempV.x, tempV.y, tempV.z);
-                        }
-                        i = maxStep; //force it to stop
-                        break;
-                    }
-                }
-                break;
-            case 'r':
-                if (tempV.z < 0 && direction.z < 0){
-                    i = maxStep; //force it to stop
-                    break;
-                }
-                if (tempVox != NULL){
-                    if (tempVox->type != '\0'){
-                        removeVoxel(tempV.x, tempV.y, tempV.z);
-                        i = maxStep; //force it to stop
-                        break;
-                    }
-                }
-                break;
-            }
-        }
-        i += step;
-    }
+	while (i < _maxStep){
+		tempV = direction * i + startPosition;
+		if (_voxelGrid->getVoxel(tempV.x, tempV.y, tempV.z) != NULL && _voxelGrid->getVoxel(tempV.x, tempV.y, tempV.z)->type != 0 && _voxelGrid->getVoxel(tempV.x, tempV.y, tempV.z)->type != '\0'){
+			cout << _voxelGrid->getVoxel(tempV.x, tempV.y, tempV.z)->type << endl;
+			_currentIntersect = tempV;
+			break;
+		}
+		else if ((tempV.x < 0 && direction.x < 0) || (tempV.z < 0 && direction.z < 0) || (tempV.y < 0 && direction.y < 0)){
+			_currentIntersect = tempV;
+			break;
+		}
+		else{
+			_currentIntersect = tempV;
+		//	break;
+		}
+		i += _step;
+	}
 
     debugP2 = tempV;
 }

@@ -19,6 +19,7 @@ public:
     static void releaseWireframeBox();
 
 private:
-    static Mesh* _mesh;
+	static Mesh* _mesh;
+	static Mesh* _blockMesh;
 };
 

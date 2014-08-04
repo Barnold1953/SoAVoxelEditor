@@ -23,6 +23,7 @@
 #include "VoxelEditor.h"
 #include "TextureManager.h"
 #include "Voxel.h"
+#include "Awesomium.h"
 
 #include <stdlib.h>
 #include <time.h> 
@@ -83,7 +84,7 @@ void initialize()
 	loadOptions("Data/options.ini");
 
     voxelEditor.initialize();
-	
+
 	initializeShaders();
 	
     TextureManager::loadTextures();
@@ -191,7 +192,12 @@ void initializeShaders() {
 //get the SDL user input
 void control() {
 	SDL_Event evnt;
+	Voxel v;
+
 	while (SDL_PollEvent(&evnt)) {
+		if (voxelEditor.getState() == 'i'){
+			voxelEditor.findIntersect(mainCamera->getPosition(), mainCamera->screenToWorld(glm::vec2(evnt.motion.x, evnt.motion.y), graphicsOptions.screenWidth, graphicsOptions.screenHeight));
+		}
 		switch (evnt.type) {
 		case SDL_QUIT:
 			gameState = EXIT;
@@ -203,9 +209,11 @@ void control() {
 			break;
 		case SDL_MOUSEBUTTONDOWN:
             if(evnt.button.button == SDL_BUTTON_LEFT) {
-				glm::vec3 temp = mainCamera->screenToWorld(glm::vec2(evnt.motion.x, evnt.motion.y), graphicsOptions.screenWidth, graphicsOptions.screenHeight);
-				voxelEditor.findIntersect(mainCamera->getPosition(), temp);
-            }
+				if (voxelEditor.getState() != 'i'){
+					voxelEditor.findIntersect(mainCamera->getPosition(), mainCamera->screenToWorld(glm::vec2(evnt.motion.x, evnt.motion.y), graphicsOptions.screenWidth, graphicsOptions.screenHeight));
+				}
+				voxelEditor.handleClick();
+			}
             MouseButtons[evnt.button.button] = true;
 			break;
 		case SDL_MOUSEBUTTONUP:
@@ -240,13 +248,35 @@ void control() {
                 voxelEditor.removeSelected();
                 break;
             case SDLK_p:
-                Voxel v;
-                for(int i = 0; i < 3; i++)
+               for(int i = 0; i < 3; i++)
                     v.color[i] = rand() % 256;
                 v.color[3] = 255;
                 v.type = 'b';
                 voxelEditor.setCurrentVoxel(v);
                 break;
+			case SDLK_c:
+				v.type = 'b';
+				int color[4];
+				cout << "Red: ";
+				cin >> color[0];
+				cout << "Green: ";
+				cin >> color[1];
+				cout << "Blue: ";
+				cin >> color[2];
+				cout << "Alpha: ";
+				cin >> color[3];
+				//printf("current voxel color input format: r g b a\n");
+				//scanf("%d %d %d %d", color[0], color[1], color[2], color[3]);
+				v.color[0] = color[0];
+				v.color[1] = color[1];
+				v.color[2] = color[2];
+				v.color[3] = color[3];
+				cout << "Color inputs are " << v.color[0] << " " << v.color[1] << " " << v.color[2] << endl;
+				voxelEditor.setCurrentVoxel(v);
+				break;
+			case SDLK_x:
+				v = *voxelEditor.getCurrentVoxel();
+				printf("_currentVoxel color: %d %d %d %d\n", v.color[0], v.color[1], v.color[2], v.color[3]);
             }
 			break;
 
