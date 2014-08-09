@@ -5,6 +5,11 @@
 #include "Errors.h"
 
 Mesh* RenderUtil::_mesh = nullptr;
+Mesh* RenderUtil::_referenceCubeMesh = nullptr;
+GLuint* RenderUtil::_referenceCubeIndices = new GLuint[36];
+glm::vec3 RenderUtil::_lastPosition = glm::vec3(-1, -1, -1);
+BlockMesh RenderUtil::_voxVerts = BlockMesh();
+BlockMesh RenderUtil::_voxBaseVerts = BlockMesh();
 
 bool RenderUtil::checkGlError(){
     GLenum err = glGetError();
@@ -203,4 +208,85 @@ void RenderUtil::releaseWireframeBox() {
         glDeleteBuffers(1, &_mesh->iboID);
         delete _mesh;
     }
+}
+
+void RenderUtil::initializeReferenceVoxel(){
+	_referenceCubeIndices = new GLuint[36];
+	
+	for (int i = 0, j = 0; i < 36; i += 6, j += 4){
+		_referenceCubeIndices[i] = j;
+		_referenceCubeIndices[i + 1] = j + 1;
+		_referenceCubeIndices[i + 2] = j + 2;
+		_referenceCubeIndices[i + 3] = j + 2;
+		_referenceCubeIndices[i + 4] = j + 3;
+		_referenceCubeIndices[i + 5] = j;
+	}
+
+	for (int i = 0; i < 24; i++){
+		_voxBaseVerts.verts[i].position.x = cubeVertices[i * 3];
+		_voxBaseVerts.verts[i].position.y = cubeVertices[i * 3 + 1];
+		_voxBaseVerts.verts[i].position.z = cubeVertices[i * 3 + 2];
+
+		_voxBaseVerts.verts[i].normal.x = cubeNormals[i * 3];
+		_voxBaseVerts.verts[i].normal.y = cubeNormals[i * 3 + 1];
+		_voxBaseVerts.verts[i].normal.z = cubeNormals[i * 3 + 2];
+
+		_voxBaseVerts.verts[i].color[0] = 255;
+		_voxBaseVerts.verts[i].color[1] = 255;
+		_voxBaseVerts.verts[i].color[2] = 255;
+		_voxBaseVerts.verts[i].color[3] = 100;
+	}
+
+	_referenceCubeMesh = new Mesh();
+	_referenceCubeMesh->iboID = 0;
+	_referenceCubeMesh->vboID = 0;
+
+	_lastPosition = glm::vec3(-1, -1, -1);
+}
+
+void RenderUtil::drawReferenceVoxel(class Camera* camera, const glm::vec3 position){
+	if (!_referenceCubeMesh) initializeReferenceVoxel();
+
+	blockShader.bind();
+
+	glm::mat4 modelMatrix(1);
+	modelMatrix[3][0] = -camera->getPosition().x;
+	modelMatrix[3][1] = -camera->getPosition().y;
+	modelMatrix[3][2] = -camera->getPosition().z;
+
+	glm::mat4 MVP = camera->getProjectionMatrix() * camera->getViewMatrix() * modelMatrix;
+
+	//send our uniform data, the matrix, the light position, and the texture data
+	glUniformMatrix4fv(blockShader.mvpID, 1, GL_FALSE, &MVP[0][0]);
+
+	glm::vec3 lightPos = position;
+	lightPos = glm::normalize(lightPos);
+	glUniform3f(blockShader.lightPosID, lightPos.x, lightPos.y, lightPos.z);
+
+	if ((int)position.x != (int)_lastPosition.x || (int)position.y != (int)_lastPosition.y || (int)position.z != (int)_lastPosition.z){
+		for (int i = 0; i < 24; i++){
+			_voxVerts.verts[i] = _voxBaseVerts.verts[i];
+			_voxVerts.verts[i].position.x += position.x;
+			_voxVerts.verts[i].position.y += position.y;
+			_voxVerts.verts[i].position.z += position.z;
+		}
+		_lastPosition = position;
+		RenderUtil::uploadMesh(&_referenceCubeMesh->vboID, &_referenceCubeMesh->iboID, &_voxVerts.verts[0], 24, _referenceCubeIndices, 36);
+	}
+	else{
+		glBindBuffer(GL_ARRAY_BUFFER, _referenceCubeMesh->vboID);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _referenceCubeMesh->iboID);
+	}
+
+	//initialize the buffer, only happens once
+	
+	//set our attribute pointers using our interleaved vertex data. Last parameter is offset into the vertex
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(BlockVertex), (void *)0); //vertexPosition
+	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(BlockVertex), (void *)12); //vertexColor
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(BlockVertex), (void *)16); //vertexNormal
+
+	//Finally, draw our data. The last parameter is the offset into the bound buffer
+	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, NULL);
+
+	blockShader.unBind();
 }

@@ -17,9 +17,13 @@ public:
     static void initializeWireframeBox();
     static void drawWireframeBox(class Camera* camera, const glm::vec3& position, const glm::vec3& size, const glm::vec4& color);
     static void releaseWireframeBox();
+	static void initializeReferenceVoxel();
+	static void drawReferenceVoxel(class Camera* camera, glm::vec3 position);
 
 private:
-	static Mesh* _mesh;
-	static Mesh* _blockMesh;
+	static Mesh *_mesh, *_referenceCubeMesh;
+	static BlockMesh _voxVerts, _voxBaseVerts;
+	static GLuint *_referenceCubeIndices;
+	static glm::vec3 _lastPosition;
 };
 

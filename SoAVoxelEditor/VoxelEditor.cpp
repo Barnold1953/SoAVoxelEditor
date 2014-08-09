@@ -23,7 +23,7 @@ VoxelEditor::~VoxelEditor()
 
 void VoxelEditor::initialize() {
     std::cout << "Please input a size for your model" << std::endl;
-    int width;
+ /*   int width;
     int height;
     int length;
 	std::string input;
@@ -33,8 +33,8 @@ void VoxelEditor::initialize() {
     height = std::stoi(input);
     std::cin >> input;
     length = std::stoi(input);
-    _voxelGrid = new VoxelGrid(width, height, length);
-	//_voxelGrid = new VoxelGrid(10, 10, 10);
+    _voxelGrid = new VoxelGrid(width, height, length);*/
+	_voxelGrid = new VoxelGrid(10, 10, 10);
     _currentVoxel = new Voxel;
     _currentVoxel->type = 'b';
     _currentVoxel->color[0] = 0;
@@ -61,7 +61,24 @@ void VoxelEditor::draw(Camera *camera) {
     }
 
 	if (_state == 'i'){
-		
+		glm::vec3 temp;
+		Voxel *tempVox = _voxelGrid->getVoxel(_currentIntersect.x, _currentIntersect.y, _currentIntersect.z);
+		if (_currentIntersect.y < 0){
+			temp = _currentIntersect - (_clickDirection * _step);
+			tempVox = _voxelGrid->getVoxel(temp.x, temp.y, temp.z);
+			if (tempVox != NULL){
+				RenderUtil::drawReferenceVoxel(camera, glm::vec3((int)temp.x, (int)temp.y, (int)temp.z));
+			}
+		}
+		else if (tempVox != NULL){
+			if (tempVox->type != '\0'){
+				temp = _currentIntersect - (_clickDirection * _step);
+				tempVox = _voxelGrid->getVoxel(temp.x, temp.y, temp.z);
+				if (tempVox != NULL){
+					RenderUtil::drawReferenceVoxel(camera, glm::vec3((int)temp.x, (int)temp.y, (int)temp.z));
+				}
+			}
+		}
 	}
 
     _voxelGrid->drawVoxels(camera);
@@ -69,6 +86,7 @@ void VoxelEditor::draw(Camera *camera) {
 }
 
 void VoxelEditor::update() {
+
 }
 
 void VoxelEditor::addVoxel(int x, int y, int z) {
@@ -324,7 +342,7 @@ void VoxelEditor::findIntersect(const glm::vec3 &startPosition, const glm::vec3 
 	while (i < _maxStep){
 		tempV = direction * i + startPosition;
 		if (_voxelGrid->getVoxel(tempV.x, tempV.y, tempV.z) != NULL && _voxelGrid->getVoxel(tempV.x, tempV.y, tempV.z)->type != 0 && _voxelGrid->getVoxel(tempV.x, tempV.y, tempV.z)->type != '\0'){
-			cout << _voxelGrid->getVoxel(tempV.x, tempV.y, tempV.z)->type << endl;
+			//cout << _voxelGrid->getVoxel(tempV.x, tempV.y, tempV.z)->type << endl;
 			_currentIntersect = tempV;
 			break;
 		}
@@ -338,6 +356,7 @@ void VoxelEditor::findIntersect(const glm::vec3 &startPosition, const glm::vec3 
 		}
 		i += _step;
 	}
+
 
     debugP2 = tempV;
 }
