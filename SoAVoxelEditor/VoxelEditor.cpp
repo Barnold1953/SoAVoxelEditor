@@ -23,7 +23,7 @@ VoxelEditor::~VoxelEditor()
 
 void VoxelEditor::initialize() {
     std::cout << "Please input a size for your model" << std::endl;
- /*   int width;
+    int width;
     int height;
     int length;
 	std::string input;
@@ -33,8 +33,8 @@ void VoxelEditor::initialize() {
     height = std::stoi(input);
     std::cin >> input;
     length = std::stoi(input);
-    _voxelGrid = new VoxelGrid(width, height, length);*/
-	_voxelGrid = new VoxelGrid(10, 10, 10);
+    _voxelGrid = new VoxelGrid(width, height, length);
+	//_voxelGrid = new VoxelGrid(10, 10, 10);
     _currentVoxel = new Voxel;
     _currentVoxel->type = 'b';
     _currentVoxel->color[0] = 0;
@@ -67,7 +67,7 @@ void VoxelEditor::draw(Camera *camera) {
 			temp = _currentIntersect - (_clickDirection * _step);
 			tempVox = _voxelGrid->getVoxel(temp.x, temp.y, temp.z);
 			if (tempVox != NULL){
-				RenderUtil::drawReferenceVoxel(camera, glm::vec3((int)temp.x, (int)temp.y, (int)temp.z));
+				RenderUtil::drawReferenceVoxel(camera, glm::vec3((int)temp.x, (int)temp.y, (int)temp.z), _brushVoxelCoords);
 			}
 		}
 		else if (tempVox != NULL){
@@ -75,7 +75,7 @@ void VoxelEditor::draw(Camera *camera) {
 				temp = _currentIntersect - (_clickDirection * _step);
 				tempVox = _voxelGrid->getVoxel(temp.x, temp.y, temp.z);
 				if (tempVox != NULL){
-					RenderUtil::drawReferenceVoxel(camera, glm::vec3((int)temp.x, (int)temp.y, (int)temp.z));
+					RenderUtil::drawReferenceVoxel(camera, glm::vec3((int)temp.x, (int)temp.y, (int)temp.z), _brushVoxelCoords);
 				}
 			}
 		}
@@ -302,7 +302,10 @@ void VoxelEditor::handleClick(){
 			tempV -= (_clickDirection * _step);
 			tempVox = _voxelGrid->getVoxel(tempV.x, tempV.y, tempV.z);
 			if (tempVox != NULL){
-				addVoxel(tempV.x, tempV.y, tempV.z);
+				if (_brushVoxelCoords.size() > 0)
+					drawBrush();
+				else
+					addVoxel(tempV.x, tempV.y, tempV.z);
 			}
 		}
 		else if (tempVox != NULL){
@@ -313,7 +316,10 @@ void VoxelEditor::handleClick(){
 					if (tempVox->type == '\0'){
 						glm::vec3 apos = tempV;
 					}
-					addVoxel(tempV.x, tempV.y, tempV.z);
+					if (_brushVoxelCoords.size() > 0)
+						drawBrush();
+					else
+						addVoxel(tempV.x, tempV.y, tempV.z);
 				}
 			}
 		}
@@ -359,6 +365,72 @@ void VoxelEditor::findIntersect(const glm::vec3 &startPosition, const glm::vec3 
 
 
     debugP2 = tempV;
+}
+
+void VoxelEditor::brushRange(){
+	if (_brushVoxelCoords.size() > 0){
+		_brushVoxelCoords.clear();
+		_brushVoxels.clear();
+		printf("Brush cleared\n");
+	}
+	else if (_selectedFirstBlock && _selectedSecondBlock && _state == 's') {
+		makeBrush(_selectedX1, _selectedY1, _selectedZ1, _selectedX2, _selectedY2, _selectedZ2);
+	}
+}
+
+void VoxelEditor::makeBrush(int x1, int y1, int z1, int x2, int y2, int z2){
+	Voxel *tv;
+	
+	int startX = x1 < x2 ? x1 : x2;
+	int startY = y1 < y2 ? y1 : y2;
+	int startZ = z1 < z2 ? z1 : z2;
+
+	int endX = x2 <= x1 ? x1 : x2;
+	int endY = y2 <= y1 ? y1 : y2;
+	int endZ = z2 <= z1 ? z1 : z2;
+	for (int i = startX; i <= endX; i++) {
+		for (int j = startY; j <= endY; j++) {
+			for (int k = startZ; k <= endZ; k++) {
+				tv = _voxelGrid->getVoxel(i, j, k);
+				if (tv != nullptr && tv->type != 0){
+					_brushVoxelCoords.push_back(glm::vec3(i - startX, j - startY, k - startZ));
+					_brushVoxels.push_back(*tv);
+				}
+			}
+		}
+	}
+	printf("Brush created\n");
+}
+
+void VoxelEditor::drawBrush(){
+	_currentIntersect -= _step * _clickDirection;
+	for (int i = 0; i < _brushVoxelCoords.size(); i++){
+		if ((int)_currentIntersect.x + _brushVoxelCoords[i].x >= _voxelGrid->getWidth())
+			return;
+		if ((int)_currentIntersect.y + _brushVoxelCoords[i].y >= _voxelGrid->getHeight())
+			return;
+		if ((int)_currentIntersect.z + _brushVoxelCoords[i].z >= _voxelGrid->getHeight())
+			return;
+		if (_voxelGrid->getVoxel((int)_currentIntersect.x + _brushVoxelCoords[i].x, (int)_currentIntersect.y + _brushVoxelCoords[i].y, (int)_currentIntersect.z + _brushVoxelCoords[i].z)->type != 0){
+			printf("Brush blocked\n");
+			return;
+		}
+	}
+	
+	vector <Command*> tempComList;
+
+	for (int i = 0; i < _brushVoxels.size(); i++){
+		_voxelGrid->addVoxel(_brushVoxels[i], _brushVoxelCoords[i].x + (int)_currentIntersect.x, _brushVoxelCoords[i].y + (int)_currentIntersect.y, _brushVoxelCoords[i].z + (int)_currentIntersect.z);
+		Command* c = new Command;
+		c->type = 'i';
+		c->coord.x = _brushVoxelCoords[i].x + (int)_currentIntersect.x;
+		c->coord.y = _brushVoxelCoords[i].y + (int)_currentIntersect.y;
+		c->coord.z = _brushVoxelCoords[i].z + (int)_currentIntersect.z;
+		c->v = &_brushVoxels[i];
+		tempComList.push_back(c);
+	}
+
+	if (tempComList.size() > 0) newCommand(tempComList);
 }
 
 //a more functionality is added, more cases need to be created for undo/redo

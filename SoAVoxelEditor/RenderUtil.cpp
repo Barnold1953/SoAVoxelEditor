@@ -10,6 +10,7 @@ GLuint* RenderUtil::_referenceCubeIndices = new GLuint[36];
 glm::vec3 RenderUtil::_lastPosition = glm::vec3(-1, -1, -1);
 BlockMesh RenderUtil::_voxVerts = BlockMesh();
 BlockMesh RenderUtil::_voxBaseVerts = BlockMesh();
+vector <BlockVertex> RenderUtil::_brushVerts = vector <BlockVertex>();
 
 bool RenderUtil::checkGlError(){
     GLenum err = glGetError();
@@ -244,15 +245,18 @@ void RenderUtil::initializeReferenceVoxel(){
 	_lastPosition = glm::vec3(-1, -1, -1);
 }
 
-void RenderUtil::drawReferenceVoxel(class Camera* camera, const glm::vec3 position){
+void RenderUtil::drawReferenceVoxel(class Camera* camera, const glm::vec3 position, vector <glm::vec3> &brushCoords){
 	if (!_referenceCubeMesh) initializeReferenceVoxel();
 
 	blockShader.bind();
 
+
+	const glm::vec3 &pos = camera->getPosition();
+
 	glm::mat4 modelMatrix(1);
-	modelMatrix[3][0] = -camera->getPosition().x;
-	modelMatrix[3][1] = -camera->getPosition().y;
-	modelMatrix[3][2] = -camera->getPosition().z;
+	modelMatrix[3][0] = -pos.x;
+	modelMatrix[3][1] = -pos.y;
+	modelMatrix[3][2] = -pos.z;
 
 	glm::mat4 MVP = camera->getProjectionMatrix() * camera->getViewMatrix() * modelMatrix;
 
@@ -263,15 +267,46 @@ void RenderUtil::drawReferenceVoxel(class Camera* camera, const glm::vec3 positi
 	lightPos = glm::normalize(lightPos);
 	glUniform3f(blockShader.lightPosID, lightPos.x, lightPos.y, lightPos.z);
 
+	GLuint *indices;
+
 	if ((int)position.x != (int)_lastPosition.x || (int)position.y != (int)_lastPosition.y || (int)position.z != (int)_lastPosition.z){
-		for (int i = 0; i < 24; i++){
-			_voxVerts.verts[i] = _voxBaseVerts.verts[i];
-			_voxVerts.verts[i].position.x += position.x;
-			_voxVerts.verts[i].position.y += position.y;
-			_voxVerts.verts[i].position.z += position.z;
+		if (brushCoords.size() < 1){
+			indices = new GLuint[36];
+			for (int i = 0; i < 24; i++){
+				_voxVerts.verts[i] = _voxBaseVerts.verts[i];
+				_voxVerts.verts[i].position.x += position.x;
+				_voxVerts.verts[i].position.y += position.y;
+				_voxVerts.verts[i].position.z += position.z;
+			}
+			RenderUtil::uploadMesh(&_referenceCubeMesh->vboID, &_referenceCubeMesh->iboID, &_voxVerts.verts[0], 24, _referenceCubeIndices, 36);
+		}
+		else{
+			_brushVerts.resize(0);
+			for (int i = 0; i < brushCoords.size(); i++){
+				BlockVertex tv;
+				for (int j = 0; j < 24; j++){
+					tv = _voxBaseVerts.verts[j];
+					/*tv.position.x = brushCoords[i].x;
+					tv.position.y = brushCoords[i].y;
+					tv.position.z = brushCoords[i].z;*/
+					tv.position.x += position.x + brushCoords[i].x;
+					tv.position.y += position.y + brushCoords[i].y;
+					tv.position.z += position.z + brushCoords[i].z;
+					_brushVerts.push_back(tv);
+				}
+			}
+			indices = new GLuint[36 * brushCoords.size()];
+			for (int i = 0, j = 0; i < 36 * brushCoords.size(); i += 6, j += 4){
+				indices[i] = j;
+				indices[i + 1] = j + 1;
+				indices[i + 2] = j + 2;
+				indices[i + 3] = j + 2;
+				indices[i + 4] = j + 3;
+				indices[i + 5] = j;
+			}
+			RenderUtil::uploadMesh(&_referenceCubeMesh->vboID, &_referenceCubeMesh->iboID, &_brushVerts[0], _brushVerts.size(), indices, 36 * brushCoords.size());
 		}
 		_lastPosition = position;
-		RenderUtil::uploadMesh(&_referenceCubeMesh->vboID, &_referenceCubeMesh->iboID, &_voxVerts.verts[0], 24, _referenceCubeIndices, 36);
 	}
 	else{
 		glBindBuffer(GL_ARRAY_BUFFER, _referenceCubeMesh->vboID);
@@ -286,7 +321,13 @@ void RenderUtil::drawReferenceVoxel(class Camera* camera, const glm::vec3 positi
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(BlockVertex), (void *)16); //vertexNormal
 
 	//Finally, draw our data. The last parameter is the offset into the bound buffer
-	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, NULL);
+	if (brushCoords.size() > 0){
+		glDrawElements(GL_TRIANGLES, (6 * _brushVerts.size()) / 4, GL_UNSIGNED_INT, NULL);
+		//glDrawElements(GL_TRIANGLES, 36 * brushCoords.size(), GL_UNSIGNED_INT, NULL);
+	}
+	else{
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, NULL);
+	}
 
 	blockShader.unBind();
 }

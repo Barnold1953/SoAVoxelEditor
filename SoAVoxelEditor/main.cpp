@@ -277,6 +277,10 @@ void control() {
 			case SDLK_x:
 				v = *voxelEditor.getCurrentVoxel();
 				printf("_currentVoxel color: %d %d %d %d\n", v.color[0], v.color[1], v.color[2], v.color[3]);
+				break;
+			case SDLK_b:
+				voxelEditor.brushRange();
+				break;
             }
 			break;
 

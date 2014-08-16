@@ -57,6 +57,10 @@ public:
     Voxel* getCurrentVoxel() { return _currentVoxel; }
 	void drawReferenceBlock(glm::vec3 intersect);
 
+	void brushRange();
+	void makeBrush(int x1, int y1, int z1, int x2, int y2, int z2);
+	void drawBrush();
+
 private:
 	const float _step = 0.1f, _maxStep = 50.0f;
 	glm::vec3 _clickStart, _clickDirection;
@@ -70,5 +74,7 @@ private:
     bool _selectedSecondBlock;
     int _selectedX2, _selectedY2, _selectedZ2;
 	glm::vec3 _currentIntersect, _currentMarker;
+	vector <Voxel> _brushVoxels;
+	vector <glm::vec3> _brushVoxelCoords;
 };
 
