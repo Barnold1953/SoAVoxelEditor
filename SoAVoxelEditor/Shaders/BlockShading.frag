@@ -20,6 +20,7 @@ void main(){
     
 	vec3 diffuseColor = fragmentColor.rgb * cosTheta;
 	color = vec4(diffuseColor, fragmentColor.a);
+	//color = fragmentColor;
     //diffuse
     
     

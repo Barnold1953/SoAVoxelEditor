@@ -25,11 +25,11 @@ void BlockShader::initialize(string dirPath)
 	GLuint vID, fID;
 	shaderID = LoadShaders((dirPath + "BlockShading.vert").c_str(), (dirPath + "BlockShading.frag").c_str(), vID, fID);
 	glBindAttribLocation(shaderID, 0, "vertexPosition");
-	glBindAttribLocation(shaderID, 1, "vertexColor");
-	glBindAttribLocation(shaderID, 2, "vertexNormal");
+    glBindAttribLocation(shaderID, 1, "vertexNormal");
 	LinkShaders(shaderID, vID, fID);
 
 	mvpID = GetUniform(shaderID, "MVP");
+    colorID = GetUniform(shaderID, "meshColor");
 
 	lightPosID = GetUniform(shaderID, "lightPosition_worldspace");
 
@@ -38,8 +38,7 @@ void BlockShader::initialize(string dirPath)
 	initialized = true;
 }
 
-void BlockShader::bind()
-{
+void BlockShader::bind() {
 	if (!initialized){
 		error("SHADER BOUND BEFORE INITIALIZATION");
 		int a;
@@ -48,18 +47,13 @@ void BlockShader::bind()
 	glUseProgram(shaderID);
 	//need to enable all the vertex attributes.
 	glEnableVertexAttribArray(0); //vertexPosition
-	glEnableVertexAttribArray(1); //vertexColor
-	glEnableVertexAttribArray(2); //vertexNormal
+	glEnableVertexAttribArray(1); //vertexNomal
 }
 
-void BlockShader::unBind()
-{
+void BlockShader::unBind() {
 	//need to disable all the vertex attributes. Otherwise, bugs occur when drawing other things on some graphics cards
 	glDisableVertexAttribArray(0); //vertexPosition
-	glDisableVertexAttribArray(1); //vertexColor
-	glDisableVertexAttribArray(2); //vertexNormal
-	glDisableVertexAttribArray(3); //textureCoordinate
-	glDisableVertexAttribArray(4); //textureType
+	glDisableVertexAttribArray(1); //vertexNormal
 }
 
 void GridShader::initialize(string dirPath)

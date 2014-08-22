@@ -88,7 +88,7 @@ void initialize()
 	
     TextureManager::loadTextures();
 
-    drawDebugLine = false;
+    drawDebugLine = true;
 
 	mainCamera = new Camera();
 
@@ -209,7 +209,6 @@ void control() {
             MouseButtons[evnt.button.button] = true;
 			break;
 		case SDL_MOUSEBUTTONUP:
-            std::cout << "Mouse button released!" << std::endl;
 			MouseButtons[evnt.button.button] = false;
 			break;
 		case SDL_MOUSEWHEEL:

@@ -14,4 +14,5 @@ struct VoxelType {
 struct Voxel {
     unsigned short type;
 	GLubyte color[4];
+    char sideVisibility;
 };

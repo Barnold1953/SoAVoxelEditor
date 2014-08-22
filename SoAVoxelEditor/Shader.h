@@ -38,6 +38,8 @@ public:
 	void initialize(string dirPath);
 	void bind();
 	void unBind();
+
+    GLuint colorID;
 };
 
 class GridShader : public Shader

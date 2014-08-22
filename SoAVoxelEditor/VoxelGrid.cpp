@@ -16,14 +16,11 @@ _layerSize(width * height),
 _size(width * height * length),
 _voxelCount(0)
 {
-    Voxel tmpVoxel;
-    for(int i = 0; i < 3; i++)
-        tmpVoxel.color[i] = 0;
-    tmpVoxel.color[3] = 255;
-    tmpVoxel.type = 0;
     _voxels = new Voxel[_size];
     for(int i = 0; i < _size; i++) {
         _voxels[i] = Voxel();
+        _voxels[i].type = 0;
+        _voxels[i].sideVisibility = 63;
     }
 }
 
@@ -34,7 +31,7 @@ bool VoxelGrid::addVoxel(const Voxel& newV, int x, int y, int z){
     Voxel *tempV = getVoxel(x, y, z);
     
     if (tempV == nullptr){
-        return 0;
+        return false;
     }
 
     if (tempV->type == '\0'){
@@ -42,11 +39,39 @@ bool VoxelGrid::addVoxel(const Voxel& newV, int x, int y, int z){
         tempV->type = newV.type;
         for(int i = 0; i < 4; i++)
             tempV->color[i] = newV.color[i];
+        
+        Voxel* tempVoxel = nullptr;
+
         VoxelRenderer::addVoxel(x, y, z, newV.color);
-		return 1;
+
+        setVoxelSideVisiblity(x + 1, y, z, Direction::WEST, false);
+        if(!isVoxelVisible(x + 1, y, z))
+            VoxelRenderer::removeVoxel(x + 1, y, z);
+
+        setVoxelSideVisiblity(x, y + 1, z, Direction::BOTTOM, false);
+        if(!isVoxelVisible(x, y + 1, z))
+            VoxelRenderer::removeVoxel(x, y + 1, z);
+
+        setVoxelSideVisiblity(x, y, z + 1, Direction::SOUTH, false);
+        if(!isVoxelVisible(x, y, z + 1))
+            VoxelRenderer::removeVoxel(x, y, z + 1);
+
+        setVoxelSideVisiblity(x - 1, y, z, Direction::EAST, false);
+        if(!isVoxelVisible(x - 1, y, z))
+            VoxelRenderer::removeVoxel(x - 1, y, z);
+
+        setVoxelSideVisiblity(x, y - 1, z, Direction::TOP, false);
+        if(!isVoxelVisible(x, y - 1, z))
+            VoxelRenderer::removeVoxel(x, y - 1, z);
+
+        setVoxelSideVisiblity(x, y, z - 1, Direction::NORTH, false);
+        if(!isVoxelVisible(x, y, z - 1))
+            VoxelRenderer::removeVoxel(x, y, z - 1);
+
+		return true;
     } else{
         //std::printf("Voxel space <%d,%d,%d> is occupied.\n", x, y, z);
-		return 0;
+		return false;
     }
 }
 
@@ -61,9 +86,35 @@ bool VoxelGrid::removeVoxel(int x, int y, int z){
         _voxelCount--;
         tempV->type = 0;
         
-        VoxelRenderer::removeVoxel(x, y, z);
+        if(!isVoxelVisible(x, y, z))
+            VoxelRenderer::removeVoxel(x, y, z);
+
+        Voxel* tempVoxel = nullptr;
+        setVoxelSideVisiblity(x + 1, y, z, Direction::WEST, true);
+        if((tempVoxel = getVoxel(x + 1, y, z)) && tempVoxel->type != 0)
+            VoxelRenderer::addVoxel(x + 1, y, z, tempVoxel->color);
+
+        setVoxelSideVisiblity(x, y + 1, z, Direction::BOTTOM, true);
+        if((tempVoxel = getVoxel(x, y + 1, z)) && tempVoxel->type != 0)
+            VoxelRenderer::addVoxel(x, y + 1, z, tempVoxel->color);
+
+        setVoxelSideVisiblity(x, y, z + 1, Direction::SOUTH, true);
+        if((tempVoxel = getVoxel(x, y, z + 1)) && tempVoxel->type != 0)
+            VoxelRenderer::addVoxel(x, y, z + 1, tempVoxel->color);
+
+        setVoxelSideVisiblity(x - 1, y, z, Direction::EAST, true);
+        if((tempVoxel = getVoxel(x - 1, y, z)) && tempVoxel->type != 0)
+            VoxelRenderer::addVoxel(x - 1, y, z, tempVoxel->color);
+
+        setVoxelSideVisiblity(x, y - 1, z, Direction::TOP, true);
+        if((tempVoxel = getVoxel(x, y - 1, z)) && tempVoxel->type != 0)
+            VoxelRenderer::addVoxel(x, y - 1, z, tempVoxel->color);
+
+        setVoxelSideVisiblity(x, y, z - 1, Direction::NORTH, true);
+        if((tempVoxel = getVoxel(x, y, z - 1)) && tempVoxel->type != 0)
+            VoxelRenderer::addVoxel(x, y, z - 1, tempVoxel->color);
     }
-	return 1;
+	return true;
 }
 
 Voxel* VoxelGrid::getVoxel(int x, int y, int z){
@@ -72,6 +123,42 @@ Voxel* VoxelGrid::getVoxel(int x, int y, int z){
     if (z < 0 || z >= _length) return nullptr;
 
     return &_voxels[z*_layerSize + y*_width + x];
+}
+
+void VoxelGrid::setVoxelSideVisiblity(const int x, const int y, const int z, const Direction side, const bool visible) {
+    if(x < 0 || x >= _width || y < 0 || y >= _height || z < 0 || z >= _length) return;
+
+    int index = z*_layerSize + y*_width + x;
+    
+    bool wasVisible = isVoxelSideVisibleNoBoundsCheck(x, y, z, side);
+    if(wasVisible && visible)
+        return;
+    if(!wasVisible && !visible)
+        return;
+    if(wasVisible && !visible) {
+        _voxels[index].sideVisibility &= ~(1 << side);
+        return;
+    }
+    if(!wasVisible && visible) {
+        _voxels[index].sideVisibility |= (1 << side);
+        return;
+    }
+}
+
+bool VoxelGrid::isVoxelSideVisible(const int x, const int y, const int z, const Direction side) const {
+    if(x < 0 || x >= _width || y < 0 || y >= _height || z < 0 || z >= _length) return false;
+
+    return ((_voxels[z*_layerSize + y*_width + x].sideVisibility & (1 << side)) >> side) == 1;
+}
+
+inline bool VoxelGrid::isVoxelSideVisibleNoBoundsCheck(const int x, const int y, const int z, const Direction side) const {
+    return ((_voxels[z*_layerSize + y*_width + x].sideVisibility & (1 << side)) >> side) == 1;
+}
+
+bool VoxelGrid::isVoxelVisible(const int x, const int y, const int z) {
+    if(x < 0 || x >= _width || y < 0 || y >= _height || z < 0 || z >= _length) return false;
+
+    return (bool)_voxels[z*_layerSize + y*_width + x].sideVisibility;
 }
 
 void VoxelGrid::drawGrid(Camera *camera) {

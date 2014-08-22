@@ -1,6 +1,6 @@
 #pragma once
 #include "GlobalStructs.h"
-
+#include "Direction.h"
 #include <vector>
 
 //Forward declarations so we dont have to include camera or voxel here
@@ -13,6 +13,11 @@ public:
     bool addVoxel(const Voxel& newV, int x, int y, int z);//changed these to bools so editor knows if a command needs to be added to the command stack
     bool removeVoxel(int x, int y, int z);
     Voxel* getVoxel(int x, int y, int z);
+
+    void setVoxelSideVisiblity(const int x, const int y, const int z, const Direction side, const bool visible);
+    bool isVoxelSideVisible(const int x, const int y, const int z, const Direction side) const;
+    inline bool isVoxelSideVisibleNoBoundsCheck(const int x, const int y, const int z, const Direction side) const;
+    bool isVoxelVisible(const int x, const int y, const int z);
 
     void drawVoxels(Camera *camera);
     void drawGrid(Camera *camera);

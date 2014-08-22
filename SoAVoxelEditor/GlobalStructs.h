@@ -29,7 +29,6 @@ extern bool MouseButtons[10];
 //interleaved vertex data for a BlockShading
 struct BlockVertex {
 	glm::vec3 position;
-	GLubyte color[4];
 	glm::vec3 normal;
 };
 
@@ -48,8 +47,6 @@ struct Mesh {
     GLuint iboID;
     int numIndices;
 };
-
-
 
 //We should avoid storing these as global variables.
 //Instead, lets store this stuff in the VoxelEditor class
@@ -96,9 +93,6 @@ static float cubeTextCoords[48] = {
 
 	0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
 };
-
-
-
 
 glm::vec2 get2dPoint(glm::vec3 location, const glm::mat4 &view, const glm::mat4 &projection, int height, int width);
 glm::vec3 get3dPoint(glm::vec2 location, const glm::mat4 &view, const glm::mat4 &projection, int height, int width);

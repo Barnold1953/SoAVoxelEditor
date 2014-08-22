@@ -180,7 +180,7 @@ void VoxelEditor::findIntersect(const glm::vec3 &startPosition, const glm::vec3 
     glm::vec3 base = direction, tempV;
     Voxel *tempVox;
 
-    drawDebugLine = false;
+    //drawDebugLine = true;
     debugP1 = startPosition;
 
     const float step = 0.1f;
