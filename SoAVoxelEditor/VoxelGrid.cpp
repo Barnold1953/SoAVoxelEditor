@@ -27,9 +27,6 @@ _voxelCount(0)
     }
 }
 
-//i*layersize + j*width + k
-//Y, Z, X basically‏
-
 bool VoxelGrid::addVoxel(const Voxel& newV, int x, int y, int z){
     Voxel *tempV = getVoxel(x, y, z);
     

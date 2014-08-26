@@ -98,19 +98,8 @@ void VoxelEditor::addVoxel(int x, int y, int z) {
 		c->coord.y = y;
 		c->coord.z = z;
 
-		GLubyte color[4];
-		char type;
-		color[0] = _currentVoxel->color[0];
-		color[1] = _currentVoxel->color[1];
-		color[2] = _currentVoxel->color[2];
-		color[3] = _currentVoxel->color[3];
-		type = _currentVoxel->type;
 		c->v = new Voxel;
-		c->v->color[0] = color[0];
-		c->v->color[1] = color[1];
-		c->v->color[2] = color[2];
-		c->v->color[3] = color[3];
-		c->v->type = type;
+		*c->v = *_currentVoxel;
 
 		tempComList.push_back(c);
 		newCommand(tempComList);
@@ -126,19 +115,8 @@ void VoxelEditor::removeVoxel(int x, int y, int z) {
 		c->coord.y = y;
 		c->coord.z = z;		
 		
-		GLubyte color[4];
-		char type;
-		color[0] = _currentVoxel->color[0];
-		color[1] = _currentVoxel->color[1];
-		color[2] = _currentVoxel->color[2];
-		color[3] = _currentVoxel->color[3];
-		type = _currentVoxel->type;
 		c->v = new Voxel;
-		c->v->color[0] = color[0];
-		c->v->color[1] = color[1];
-		c->v->color[2] = color[2];
-		c->v->color[3] = color[3];
-		c->v->type = type;
+		*c->v = *_currentVoxel;
 
 		tempComList.push_back(c);
 		newCommand(tempComList);
@@ -163,7 +141,8 @@ void VoxelEditor::fillRange(int x1, int y1, int z1, int x2, int y2, int z2) {
                     c->coord.x = i;
                     c->coord.y = j;
                     c->coord.z = k;
-                    c->v = _currentVoxel;
+					c->v = new Voxel();
+                    *c->v = *_currentVoxel;
                     tempComList.push_back(c);
                 }
             }
@@ -192,14 +171,15 @@ void VoxelEditor::removeRange(int x1, int y1, int z1, int x2, int y2, int z2) {
     for(int i = startX; i <= endX; i++) {
         for(int j = startY; j <= endY; j++) {
             for(int k = startZ; k <= endZ; k++) {
+				Voxel tv = *_voxelGrid->getVoxel(i, j, k);
                 if(_voxelGrid->removeVoxel(i, j, k)) {
                     Command* c = new Command;
                     c->type = 'r';
                     c->coord.x = i;
                     c->coord.y = j;
                     c->coord.z = k;
-                    c->v = _currentVoxel;
-                    tempComList.push_back(c);
+					*c->v = tv;
+					tempComList.push_back(c);
                 }
             }
         }
@@ -426,7 +406,8 @@ void VoxelEditor::drawBrush(){
 		c->coord.x = _brushVoxelCoords[i].x + (int)_currentIntersect.x;
 		c->coord.y = _brushVoxelCoords[i].y + (int)_currentIntersect.y;
 		c->coord.z = _brushVoxelCoords[i].z + (int)_currentIntersect.z;
-		c->v = &_brushVoxels[i];
+		c->v = new Voxel;
+		*c->v = _brushVoxels[i];
 		tempComList.push_back(c);
 	}
 
